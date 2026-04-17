@@ -491,16 +491,118 @@
 // ─── CONFIG ──────────────────────────────────────────────
 const API_BASE = ''; // same origin — works both locally and on Railway
 const TOTAL_ROUNDS = 5;
-const BASE_SCORE = 100;   // points for getting it right on clue 1
-const CLUE_PENALTY = 10;  // deducted per extra clue revealed
+const BASE_SCORE = 100;
+const CLUE_PENALTY = 10;
 
-// ─── COUNTRIES POOL ──────────────────────────────────────
-const COUNTRIES = [
-  "Thailand","Brazil","Egypt","Japan","Norway","Kenya","Mexico","India",
-  "Australia","Argentina","Turkey","South Africa","Sweden","Morocco","Peru",
-  "Vietnam","Greece","Portugal","Netherlands","Colombia","New Zealand",
-  "Cuba","Tanzania","Iceland","Sri Lanka","Ghana","Jordan","Chile","Nepal","Hungary"
-];
+// ─── HARDCODED CLUES ─────────────────────────────────────
+const COUNTRY_CLUES = {
+  "Thailand": [
+    "This Southeast Asian country is located in the heart of the Indochina peninsula.",
+    "It is the only country in Southeast Asia never to have been colonized by a European power.",
+    "It shares borders with Myanmar, Laos, Cambodia, and Malaysia.",
+    "Its currency is the Baht and its capital is one of the most visited cities in Asia.",
+    "The Grand Palace and Wat Phra Kaew temple are among its most iconic landmarks."
+  ],
+  "Brazil": [
+    "This country is the largest in South America by both area and population.",
+    "The Amazon River and the world's largest tropical rainforest run through its territory.",
+    "It shares a border with every South American country except Chile and Ecuador.",
+    "Its currency is the Real and its capital city is a UNESCO World Heritage Site.",
+    "It is famous for its annual Carnival festival and the Christ the Redeemer statue."
+  ],
+  "Egypt": [
+    "This country is located in the northeastern corner of Africa.",
+    "The world's longest river flows through its desert landscape from south to north.",
+    "It shares borders with Libya, Sudan, Israel, and the Gaza Strip.",
+    "Its currency is the Pound and its capital is the largest city in Africa.",
+    "It is home to the only remaining wonder of the ancient world — the Great Pyramid of Giza."
+  ],
+  "Japan": [
+    "This island nation is located in East Asia in the Pacific Ocean.",
+    "It consists of four main islands and thousands of smaller ones with frequent earthquakes.",
+    "It is separated from China, Korea, and Russia by seas and straits.",
+    "Its currency is the Yen and its capital is the most populous metropolitan area on Earth.",
+    "Mount Fuji, cherry blossoms, and samurai culture are among its most recognized symbols."
+  ],
+  "Norway": [
+    "This country is located on the western part of the Scandinavian Peninsula in Northern Europe.",
+    "It has one of the longest coastlines in the world, famous for its dramatic fjords.",
+    "It shares land borders with Sweden, Finland, and Russia.",
+    "Its currency is the Krone and it is one of the world's largest exporters of oil and gas.",
+    "The Northern Lights can be seen from its northern regions which lie within the Arctic Circle."
+  ],
+  "Kenya": [
+    "This country straddles the equator on the eastern coast of Africa.",
+    "It is home to the Great Rift Valley and world-famous wildlife savannahs.",
+    "It borders Ethiopia, Somalia, Tanzania, Uganda, and South Sudan.",
+    "Its currency is the Shilling and its capital is the largest city in East Africa.",
+    "The Maasai Mara National Reserve hosts the annual Great Wildebeest Migration."
+  ],
+  "Mexico": [
+    "This country is located in the southern part of North America.",
+    "It features diverse geography including deserts, mountains, and tropical coastlines on two oceans.",
+    "It borders the United States to the north and Guatemala and Belize to the south.",
+    "Its currency is the Peso and its capital is one of the largest cities in the Western Hemisphere.",
+    "Ancient Aztec pyramids at Teotihuacan and Chichen Itza are among its most visited sites."
+  ],
+  "India": [
+    "This country is the world's most populous nation and a peninsula in South Asia.",
+    "The Himalayas form its northern border and the Ganges is its most sacred river.",
+    "It borders Pakistan, China, Nepal, Bhutan, Bangladesh, and Myanmar.",
+    "Its currency is the Rupee and its capital is located in the northern part of the country.",
+    "The Taj Mahal, a white marble mausoleum built by a Mughal emperor, is its most iconic landmark."
+  ],
+  "Australia": [
+    "This country is both a continent and a nation located in the Southern Hemisphere.",
+    "It is the world's largest country without a land border with any other nation.",
+    "Surrounded by the Indian and Pacific Oceans it has no land neighbors.",
+    "Its currency is the Dollar and its largest city is not its capital.",
+    "Uluru, the Great Barrier Reef, and kangaroos are among its most recognizable symbols."
+  ],
+  "Argentina": [
+    "This country is the second largest in South America and eighth largest in the world.",
+    "The Andes Mountains run along its entire western border and Patagonia covers its south.",
+    "It borders Chile, Bolivia, Paraguay, Brazil, and Uruguay.",
+    "Its currency is the Peso and its capital is known as the Paris of South America.",
+    "It is the birthplace of tango and has produced some of the world's greatest football players."
+  ],
+  "Iceland": [
+    "This island nation is located in the North Atlantic Ocean near the Arctic Circle.",
+    "It sits on the Mid-Atlantic Ridge and has more hot springs and geysers than any other country.",
+    "It has no land borders and is the most sparsely populated country in Europe.",
+    "Its currency is the Krona and its capital is the northernmost capital city in the world.",
+    "The Golden Circle tourist route includes geysers, waterfalls, and a national park with the Northern Lights."
+  ],
+  "Peru": [
+    "This country is located on the western coast of South America along the Pacific Ocean.",
+    "It contains part of the Amazon Basin, the Andes Mountains, and a coastal desert.",
+    "It borders Ecuador, Colombia, Brazil, Bolivia, and Chile.",
+    "Its currency is the Sol and its capital sits on the Pacific coast.",
+    "Machu Picchu, the ancient Incan citadel high in the Andes, is its most famous landmark."
+  ],
+  "Greece": [
+    "This country is located at the southern tip of the Balkan Peninsula in southeastern Europe.",
+    "It has thousands of islands scattered across the Aegean and Ionian Seas.",
+    "It borders Albania, North Macedonia, Bulgaria, and Turkey.",
+    "Its currency is the Euro and its capital is one of the oldest cities in the world.",
+    "The Parthenon on the Acropolis is the symbol of its ancient civilization."
+  ],
+  "Morocco": [
+    "This country is located in the northwestern corner of Africa known as the Maghreb region.",
+    "It has coastlines on both the Atlantic Ocean and the Mediterranean Sea.",
+    "It borders Algeria and Mauritania and is separated from Spain by the Strait of Gibraltar.",
+    "Its currency is the Dirham and its capital is on the Atlantic coast.",
+    "The medinas of Fez and Marrakech and the Sahara Desert are among its top attractions."
+  ],
+  "Colombia": [
+    "This country is the only one in South America with coastlines on both the Pacific Ocean and the Caribbean Sea.",
+    "It has diverse geography including Amazon rainforest, Andes mountains, and Caribbean beaches.",
+    "It borders Venezuela, Brazil, Peru, Ecuador, and Panama.",
+    "Its currency is the Peso and its capital sits at high altitude in the Andes.",
+    "It is the world's largest producer of emeralds and a top exporter of coffee and flowers."
+  ]
+};
+
 
 // ─── STATE ───────────────────────────────────────────────
 let state = {
@@ -544,13 +646,14 @@ function startGame() {
 }
 
 function pickCountry() {
-  const remaining = COUNTRIES.filter(c => !state.usedCountries.includes(c));
+  const all = Object.keys(COUNTRY_CLUES);
+  const remaining = all.filter(c => !state.usedCountries.includes(c));
   const pick = remaining[Math.floor(Math.random() * remaining.length)];
   state.usedCountries.push(pick);
   return pick;
 }
 
-async function nextRound() {
+function nextRound() {
   if (state.round >= TOTAL_ROUNDS) { endGame(); return; }
   state.round++;
   state.currentCountry = pickCountry();
@@ -566,83 +669,32 @@ async function nextRound() {
   document.getElementById('clue-cost-label').textContent = `Next clue costs ${CLUE_PENALTY} pts`;
 
   // Auto-reveal first clue free
-  await revealNextClue(true);
+  revealNextClue(true);
 }
 
-async function revealNextClue(free = false) {
-  if (state.loading || state.answered) return;
+function revealNextClue(free = false) {
+  if (state.answered) return;
+  const clues = COUNTRY_CLUES[state.currentCountry];
+  if (state.clueIndex >= clues.length) return;
 
-  if (!free && state.clueIndex > 0) {
-    // deduct points only after first clue
-  }
+  const clueText = clues[state.clueIndex];
+  state.clues.push(clueText);
+  state.clueIndex++;
 
-  state.loading = true;
-  document.getElementById('next-clue-btn').disabled = true;
-
-  // Show loading indicator
   const list = document.getElementById('clues-list');
-  const loader = document.createElement('div');
-  loader.className = 'clue-loading';
-  loader.id = 'clue-loader';
-  loader.innerHTML = `<span>Generating clue ${state.clueIndex + 1}</span><div class="dot-pulse"><span></span><span></span><span></span></div>`;
-  list.appendChild(loader);
+  const clueEl = document.createElement('div');
+  clueEl.className = 'clue-item';
+  clueEl.innerHTML = `<div class="clue-num">Clue ${state.clueIndex}</div>${clueText}`;
+  list.appendChild(clueEl);
 
-  try {
-    const clueNum = state.clueIndex + 1;
-    const previousClues = state.clues.map((c,i) => `Clue ${i+1}: ${c}`).join('\n');
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: `You are a geography trivia clue generator. Generate ONE single clue for the country the player must guess. 
-
-Rules:
-- Each clue must be a single sentence, factual, and specific
-- NEVER mention the country name or its demonym
-- Start with easier/broader clues (continent, climate, region) and get more specific (currency, neighbors, capital, landmarks, culture)
-- Clue ${clueNum} should be ${clueNum === 1 ? 'broad (continent/region)' : clueNum === 2 ? 'geographical features' : clueNum === 3 ? 'neighbors or borders' : clueNum === 4 ? 'currency or capital city' : 'a famous landmark or cultural fact'}
-- Do NOT repeat information from previous clues
-- Respond with ONLY the clue sentence, nothing else`,
-        messages: [{
-          role: 'user',
-          content: `Country: ${state.currentCountry}\nClue number: ${clueNum}\n${previousClues ? `Previous clues:\n${previousClues}` : ''}\n\nGenerate clue ${clueNum}:`
-        }]
-      })
-    });
-
-    const data = await response.json();
-    const clueText = data.content[0].text.trim();
-    state.clues.push(clueText);
-    state.clueIndex++;
-
-    // Remove loader, add real clue
-    document.getElementById('clue-loader')?.remove();
-    const clueEl = document.createElement('div');
-    clueEl.className = 'clue-item';
-    clueEl.innerHTML = `<div class="clue-num">Clue ${state.clueIndex}</div>${clueText}`;
-    list.appendChild(clueEl);
-
-    // Deduct points for clue 2+
-    if (state.clueIndex > 1) {
-      state.score = Math.max(0, state.score - CLUE_PENALTY);
-      updateUI();
-    }
-
-    // Update cost label
-    document.getElementById('clue-cost-label').textContent =
-      state.clueIndex >= 5 ? 'Max clues revealed' : `Next clue costs ${CLUE_PENALTY} pts`;
-    document.getElementById('next-clue-btn').disabled = state.clueIndex >= 5;
-
-  } catch(e) {
-    document.getElementById('clue-loader')?.remove();
-    showToast('API error — check your connection');
-    document.getElementById('next-clue-btn').disabled = false;
+  if (!free && state.clueIndex > 1) {
+    state.score = Math.max(0, state.score - CLUE_PENALTY);
+    updateUI();
   }
 
-  state.loading = false;
+  document.getElementById('clue-cost-label').textContent =
+    state.clueIndex >= clues.length ? 'All clues revealed' : `Next clue costs ${CLUE_PENALTY} pts`;
+  document.getElementById('next-clue-btn').disabled = state.clueIndex >= clues.length;
 }
 
 function submitGuess() {
