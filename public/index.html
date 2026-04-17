@@ -335,6 +335,18 @@
   .lb-score { font-family: 'DM Mono', monospace; color: var(--gold); font-weight: 500; }
   .lb-rounds { font-family: 'DM Mono', monospace; color: var(--teal); font-size: 0.85rem; }
   .lb-date { color: var(--muted); font-size: 0.8rem; font-family: 'DM Mono', monospace; }
+  .lb-delete {
+    background: transparent;
+    border: 1px solid rgba(248,113,113,0.3);
+    color: var(--red);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.2s;
+  }
+  .lb-delete:hover { background: rgba(248,113,113,0.15); border-color: var(--red); }
   .lb-empty { text-align: center; color: var(--muted); padding: 40px; font-family: 'DM Mono', monospace; font-size: 0.85rem; }
 
   /* Stats row */
@@ -470,6 +482,7 @@
             <th>Score</th>
             <th>Correct</th>
             <th>Date</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="lb-body">
@@ -794,6 +807,27 @@ async function submitScore(username, score, rounds_won) {
   }
 }
 
+async function removeScore(id) {
+  if (!confirm('Remove this entry from the leaderboard?')) return;
+  try {
+    const res = await fetch(`${API_BASE}/remove`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById(`row-${id}`)?.remove();
+      showToast('Entry removed');
+      loadLeaderboard();
+    } else {
+      showToast('Could not remove entry');
+    }
+  } catch(e) {
+    showToast('Error removing entry');
+  }
+}
+
 async function loadLeaderboard() {
   const tbody = document.getElementById('lb-body');
   tbody.innerHTML = '<tr><td colspan="5" class="lb-empty">Loading...</td></tr>';
@@ -803,7 +837,7 @@ async function loadLeaderboard() {
     const res = await fetch(`${API_BASE}/leaderboard`);
     const data = await res.json();
     if (!data.success || data.data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="lb-empty">No scores yet — be the first!</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="lb-empty">No scores yet — be the first!</td></tr>';
     } else {
       tbody.innerHTML = data.data.map((row, i) => {
         const rank = i + 1;
@@ -811,17 +845,18 @@ async function loadLeaderboard() {
         const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
         const date = new Date(row.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric' });
         const correct = row.rounds_won !== undefined ? row.rounds_won : '?';
-        return `<tr>
+        return `<tr id="row-${row.id}">
           <td><div class="rank-badge ${badgeClass}">${medal}</div></td>
           <td class="lb-name">${escHtml(row.username)}</td>
           <td class="lb-score">${row.score}</td>
           <td class="lb-rounds">${correct}/5</td>
           <td class="lb-date">${date}</td>
+          <td><button class="lb-delete" onclick="removeScore(${row.id})">✕ Remove</button></td>
         </tr>`;
       }).join('');
     }
   } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="5" class="lb-empty">⚠ Could not load leaderboard</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="lb-empty">⚠ Could not load leaderboard</td></tr>';
   }
 
   // Load /info stats
