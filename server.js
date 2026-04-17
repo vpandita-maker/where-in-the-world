@@ -1,84 +1,91 @@
 const express = require('express');
 const cors = require('cors');
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 
 const app = express();
-const db = new Database('leaderboard.db');
-
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Initialize DB
-db.exec(`
-  CREATE TABLE IF NOT EXISTS scores (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL,
-    score INTEGER NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+// PostgreSQL connection — Railway injects DATABASE_URL automatically
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+// Initialize table on startup
+async function initDB() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS scores (
+      id SERIAL PRIMARY KEY,
+      username TEXT NOT NULL,
+      score INTEGER NOT NULL,
+      rounds_won INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  console.log('Database ready');
+}
+initDB().catch(console.error);
 
 // Track endpoint performance
 const performanceLog = {};
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => trackPerformance(req.path, Date.now() - start));
+  next();
+});
 function trackPerformance(endpoint, duration) {
   if (!performanceLog[endpoint]) performanceLog[endpoint] = [];
   performanceLog[endpoint].push(duration);
 }
 
-// Middleware to measure execution time
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    trackPerformance(req.path, duration);
-  });
-  next();
-});
-
 // ─── POST /add ───────────────────────────────────────────
-app.post('/add', (req, res) => {
-  const { username, score } = req.body;
+app.post('/add', async (req, res) => {
+  const { username, score, rounds_won } = req.body;
   if (!username || score === undefined) {
-    return res.status(400).json({ success: false, error: 'username and score are required' });
+    return res.status(400).json({ success: false, error: 'username and score required' });
   }
   const clean = String(username).trim().slice(0, 30);
   const numScore = Number(score);
+  const numRounds = Number(rounds_won) || 0;
   if (!clean || isNaN(numScore)) {
     return res.status(400).json({ success: false, error: 'invalid username or score' });
   }
-  const result = db.prepare('INSERT INTO scores (username, score) VALUES (?, ?)').run(clean, numScore);
-  res.status(201).json({
-    success: true,
-    message: 'Entry added',
-    data: { id: result.lastInsertRowid, username: clean, score: numScore }
-  });
+  const result = await pool.query(
+    'INSERT INTO scores (username, score, rounds_won) VALUES ($1, $2, $3) RETURNING *',
+    [clean, numScore, numRounds]
+  );
+  res.status(201).json({ success: true, message: 'Entry added', data: result.rows[0] });
 });
 
 // ─── DELETE /remove ──────────────────────────────────────
-app.delete('/remove', (req, res) => {
+app.delete('/remove', async (req, res) => {
   const { id, username } = req.body;
   let result;
   if (id) {
-    result = db.prepare('DELETE FROM scores WHERE id = ?').run(id);
+    result = await pool.query('DELETE FROM scores WHERE id = $1', [id]);
   } else if (username) {
-    result = db.prepare('DELETE FROM scores WHERE username = ?').run(username);
+    result = await pool.query('DELETE FROM scores WHERE username = $1', [username]);
   } else {
-    return res.status(400).json({ success: false, error: 'provide id or username to remove' });
+    return res.status(400).json({ success: false, error: 'provide id or username' });
   }
-  if (result.changes === 0) return res.status(404).json({ success: false, error: 'Entry not found' });
+  if (result.rowCount === 0) return res.status(404).json({ success: false, error: 'Not found' });
   res.json({ success: true, message: 'Entry removed' });
 });
 
 // ─── GET /leaderboard ────────────────────────────────────
-app.get('/leaderboard', (req, res) => {
-  const rows = db.prepare('SELECT id, username, score, created_at FROM scores ORDER BY score DESC LIMIT 10').all();
-  res.json({ success: true, data: rows });
+app.get('/leaderboard', async (req, res) => {
+  const result = await pool.query(
+    'SELECT id, username, score, rounds_won, created_at FROM scores ORDER BY score DESC LIMIT 10'
+  );
+  res.json({ success: true, data: result.rows });
 });
 
 // ─── GET /info ───────────────────────────────────────────
-app.get('/info', (req, res) => {
-  const rows = db.prepare('SELECT score FROM scores ORDER BY score ASC').all();
+app.get('/info', async (req, res) => {
+  const result = await pool.query('SELECT score FROM scores ORDER BY score ASC');
+  const rows = result.rows;
   if (rows.length === 0) return res.json({ success: true, data: { message: 'No entries yet', count: 0 } });
 
   const scores = rows.map(r => r.score);
@@ -118,16 +125,17 @@ app.get('/performance', (req, res) => {
   res.json({ success: true, data: result });
 });
 
-// ─── GET /history (bonus) ────────────────────────────────
-app.get('/history', (req, res) => {
+// ─── GET /history ────────────────────────────────────────
+app.get('/history', async (req, res) => {
   const { from, to, username } = req.query;
   let query = 'SELECT * FROM scores WHERE 1=1';
   const params = [];
-  if (from) { query += ' AND created_at >= ?'; params.push(from); }
-  if (to) { query += ' AND created_at <= ?'; params.push(to); }
-  if (username) { query += ' AND username = ?'; params.push(username); }
+  if (from) { query += ` AND created_at >= $${params.length + 1}`; params.push(from); }
+  if (to) { query += ` AND created_at <= $${params.length + 1}`; params.push(to); }
+  if (username) { query += ` AND username = $${params.length + 1}`; params.push(username); }
   query += ' ORDER BY created_at DESC';
-  res.json({ success: true, data: db.prepare(query).all(...params) });
+  const result = await pool.query(query, params);
+  res.json({ success: true, data: result.rows });
 });
 
 function percentile(sorted, p) {
