@@ -489,7 +489,7 @@
 
 <script>
 // ─── CONFIG ──────────────────────────────────────────────
-const API_BASE = 'http://localhost:3000/api'; // change if deployed
+const API_BASE = ''; // same origin — works both locally and on Railway
 const TOTAL_ROUNDS = 5;
 const BASE_SCORE = 100;   // points for getting it right on clue 1
 const CLUE_PENALTY = 10;  // deducted per extra clue revealed
@@ -713,7 +713,7 @@ function hideFeedback() {
 // ─── LEADERBOARD API ─────────────────────────────────────
 async function submitScore(username, score, rounds_won) {
   try {
-    const res = await fetch(`${API_BASE}/scores`, {
+    const res = await fetch(`${API_BASE}/add`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, score, rounds_won })
@@ -734,7 +734,7 @@ async function loadLeaderboard() {
 
   // Load stats
   try {
-    const sRes = await fetch(`${API_BASE}/stats`);
+    const sRes = await fetch(`${API_BASE}/info`);
     const sData = await sRes.json();
     if (sData.success) {
       document.getElementById('stat-players').textContent = sData.data.total_players || 0;
