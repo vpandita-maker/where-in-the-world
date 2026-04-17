@@ -462,11 +462,6 @@
         <h2>🏆 Leaderboard</h2>
         <span class="lb-refresh" onclick="loadLeaderboard()" title="Refresh">↻</span>
       </div>
-      <div class="stats-row" id="stats-row">
-        <div class="stat-box"><div class="val" id="stat-players">—</div><div class="lbl">Players</div></div>
-        <div class="stat-box"><div class="val" id="stat-high">—</div><div class="lbl">High Score</div></div>
-        <div class="stat-box"><div class="val" id="stat-avg">—</div><div class="lbl">Avg Score</div></div>
-      </div>
       <table class="lb-table">
         <thead>
           <tr>
@@ -478,6 +473,44 @@
           </tr>
         </thead>
         <tbody id="lb-body">
+          <tr><td colspan="5" class="lb-empty">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" id="info-card">
+      <div class="lb-header">
+        <h2>📊 Score Statistics <span style="font-size:0.8rem;color:var(--muted);font-family:'DM Mono',monospace">(/info endpoint)</span></h2>
+      </div>
+      <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+        <div class="stat-box"><div class="val" id="stat-players">—</div><div class="lbl">Players</div></div>
+        <div class="stat-box"><div class="val" id="stat-high">—</div><div class="lbl">High Score</div></div>
+        <div class="stat-box"><div class="val" id="stat-avg">—</div><div class="lbl">Mean Score</div></div>
+        <div class="stat-box"><div class="val" id="stat-median">—</div><div class="lbl">Median</div></div>
+      </div>
+      <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat-box"><div class="val" id="stat-q1">—</div><div class="lbl">Q1 (25th %ile)</div></div>
+        <div class="stat-box"><div class="val" id="stat-q3">—</div><div class="lbl">Q3 (75th %ile)</div></div>
+        <div class="stat-box"><div class="val" id="stat-std">—</div><div class="lbl">Std Deviation</div></div>
+        <div class="stat-box"><div class="val" id="stat-range">—</div><div class="lbl">Score Range</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lb-header">
+        <h2>⚡ API Performance <span style="font-size:0.8rem;color:var(--muted);font-family:'DM Mono',monospace">(/performance endpoint)</span></h2>
+      </div>
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Avg (ms)</th>
+            <th>Min (ms)</th>
+            <th>Max (ms)</th>
+            <th>Calls</th>
+          </tr>
+        </thead>
+        <tbody id="perf-body">
           <tr><td colspan="5" class="lb-empty">Loading...</td></tr>
         </tbody>
       </table>
@@ -784,40 +817,71 @@ async function loadLeaderboard() {
   const tbody = document.getElementById('lb-body');
   tbody.innerHTML = '<tr><td colspan="5" class="lb-empty">Loading...</td></tr>';
 
-  // Load stats
-  try {
-    const sRes = await fetch(`${API_BASE}/info`);
-    const sData = await sRes.json();
-    if (sData.success) {
-      document.getElementById('stat-players').textContent = sData.data.total_players || 0;
-      document.getElementById('stat-high').textContent = sData.data.high_score || 0;
-      document.getElementById('stat-avg').textContent = Math.round(sData.data.avg_score || 0);
-    }
-  } catch(e) {}
-
-  // Load scores
+  // Load leaderboard scores
   try {
     const res = await fetch(`${API_BASE}/leaderboard`);
     const data = await res.json();
     if (!data.success || data.data.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5" class="lb-empty">No scores yet — be the first!</td></tr>';
-      return;
+    } else {
+      tbody.innerHTML = data.data.map((row, i) => {
+        const rank = i + 1;
+        const badgeClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+        const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+        const date = new Date(row.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+        const correct = row.rounds_won !== undefined ? row.rounds_won : '?';
+        return `<tr>
+          <td><div class="rank-badge ${badgeClass}">${medal}</div></td>
+          <td class="lb-name">${escHtml(row.username)}</td>
+          <td class="lb-score">${row.score}</td>
+          <td class="lb-rounds">${correct}/5</td>
+          <td class="lb-date">${date}</td>
+        </tr>`;
+      }).join('');
     }
-    tbody.innerHTML = data.data.map((row, i) => {
-      const rank = i + 1;
-      const badgeClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
-      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
-      const date = new Date(row.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric' });
-      return `<tr>
-        <td><div class="rank-badge ${badgeClass}">${medal}</div></td>
-        <td class="lb-name">${escHtml(row.username)}</td>
-        <td class="lb-score">${row.score}</td>
-        <td class="lb-rounds">${row.rounds_won}/5</td>
-        <td class="lb-date">${date}</td>
-      </tr>`;
-    }).join('');
   } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="5" class="lb-empty">⚠ Start the server to see leaderboard</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="lb-empty">⚠ Could not load leaderboard</td></tr>';
+  }
+
+  // Load /info stats
+  try {
+    const sRes = await fetch(`${API_BASE}/info`);
+    const sData = await sRes.json();
+    if (sData.success && sData.data.count > 0) {
+      document.getElementById('stat-players').textContent = sData.data.count;
+      document.getElementById('stat-high').textContent = sData.data.max;
+      document.getElementById('stat-avg').textContent = sData.data.mean;
+      document.getElementById('stat-median').textContent = sData.data.median;
+      document.getElementById('stat-q1').textContent = sData.data.q1;
+      document.getElementById('stat-q3').textContent = sData.data.q3;
+      document.getElementById('stat-std').textContent = sData.data.std_deviation;
+      document.getElementById('stat-range').textContent = sData.data.range;
+    } else {
+      ['stat-players','stat-high','stat-avg','stat-median','stat-q1','stat-q3','stat-std','stat-range']
+        .forEach(id => document.getElementById(id).textContent = '—');
+    }
+  } catch(e) {}
+
+  // Load /performance stats
+  const perfBody = document.getElementById('perf-body');
+  try {
+    const pRes = await fetch(`${API_BASE}/performance`);
+    const pData = await pRes.json();
+    const entries = Object.entries(pData.data);
+    if (entries.length === 0) {
+      perfBody.innerHTML = '<tr><td colspan="5" class="lb-empty">No performance data yet</td></tr>';
+    } else {
+      perfBody.innerHTML = entries.map(([endpoint, stats]) => `
+        <tr>
+          <td style="font-family:'DM Mono',monospace;color:var(--teal)">${escHtml(endpoint)}</td>
+          <td style="font-family:'DM Mono',monospace;color:var(--gold)">${stats.avg_ms}</td>
+          <td style="font-family:'DM Mono',monospace">${stats.min_ms}</td>
+          <td style="font-family:'DM Mono',monospace">${stats.max_ms}</td>
+          <td style="font-family:'DM Mono',monospace;color:var(--muted)">${stats.calls}</td>
+        </tr>`).join('');
+    }
+  } catch(e) {
+    perfBody.innerHTML = '<tr><td colspan="5" class="lb-empty">⚠ Could not load performance data</td></tr>';
   }
 }
 
