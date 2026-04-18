@@ -384,6 +384,44 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
+  /* Timer */
+  .timer-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 999px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .timer-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 999px;
+    transition: width 1s linear, background 0.3s;
+  }
+  .timer-fill.danger { background: var(--red); }
+  .timer-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: right;
+    margin-bottom: 6px;
+  }
+
+  /* Handoff screen */
+  #handoff-screen {
+    text-align: center;
+    padding: 60px 20px;
+    display: none;
+  }
+  #handoff-screen h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--teal);
+    margin-bottom: 12px;
+  }
+  #handoff-screen .final-score { font-family: 'DM Mono', monospace; font-size: 3rem; color: var(--gold); margin: 20px 0; }
+  #handoff-screen p { color: var(--muted); margin-bottom: 28px; }
+
   @media (max-width: 540px) {
     .stats-row { grid-template-columns: 1fr 1fr; }
     .action-row { flex-direction: column; }
@@ -421,6 +459,8 @@
 
     <!-- Active game -->
     <div id="active-game" style="display:none">
+      <div class="timer-label"><span id="timer-display">30</span>s remaining</div>
+      <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
       <div class="score-bar">
         <div>
           <div class="score-label">Score</div>
@@ -516,10 +556,14 @@
 
 <script>
 // ─── CONFIG ──────────────────────────────────────────────
-const API_BASE = ''; // same origin — works both locally and on Railway
+const API_BASE = '';
 const TOTAL_ROUNDS = 5;
 const BASE_SCORE = 100;
 const CLUE_PENALTY = 10;
+const ROUND_TIME = 30; // seconds per round
+
+let timerInterval = null;
+let timeLeft = ROUND_TIME;
 
 // ─── HARDCODED CLUES ─────────────────────────────────────
 const COUNTRY_CLUES = {
@@ -680,6 +724,37 @@ function pickCountry() {
   return pick;
 }
 
+function startTimer() {
+  clearTimer();
+  timeLeft = ROUND_TIME;
+  updateTimerUI();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerUI();
+    if (timeLeft <= 0) {
+      clearTimer();
+      if (!state.answered) {
+        state.answered = true;
+        showFeedback(`⏱ Time's up! The answer was ${state.currentCountry}.`, 'wrong');
+        document.getElementById('next-clue-btn').disabled = true;
+        setTimeout(() => nextRound(), 2000);
+      }
+    }
+  }, 1000);
+}
+
+function clearTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function updateTimerUI() {
+  const pct = (timeLeft / ROUND_TIME) * 100;
+  const fill = document.getElementById('timer-fill');
+  const label = document.getElementById('timer-display');
+  if (fill) { fill.style.width = pct + '%'; fill.className = 'timer-fill' + (timeLeft <= 10 ? ' danger' : ''); }
+  if (label) label.textContent = timeLeft;
+}
+
 function nextRound() {
   if (state.round >= TOTAL_ROUNDS) { endGame(); return; }
   state.round++;
@@ -695,7 +770,7 @@ function nextRound() {
   document.getElementById('next-clue-btn').disabled = false;
   document.getElementById('clue-cost-label').textContent = `Next clue costs ${CLUE_PENALTY} pts`;
 
-  // Auto-reveal first clue free
+  startTimer();
   revealNextClue(true);
 }
 
@@ -742,23 +817,19 @@ function submitGuess() {
   }
 
   updateUI();
+  clearTimer();
   document.getElementById('next-clue-btn').disabled = true;
-
-  // Wait then go to next round
-  setTimeout(() => {
-    nextRound();
-  }, 2200);
+  setTimeout(() => nextRound(), 2200);
 }
 
 function endGame() {
+  clearTimer();
   document.getElementById('active-game').style.display = 'none';
   document.getElementById('game-over').style.display = 'block';
   document.getElementById('final-score-display').textContent = `${state.score} pts`;
   document.getElementById('go-name').textContent = `Well played, ${state.username}!`;
   document.getElementById('go-summary').textContent =
     `You got ${state.roundsWon} out of ${TOTAL_ROUNDS} countries correct.`;
-
-  // Submit to leaderboard
   submitScore(state.username, state.score, state.roundsWon);
 }
 
