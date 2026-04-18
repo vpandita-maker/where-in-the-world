@@ -916,7 +916,7 @@ header h1 {
         <p style="color:rgba(200,215,245,0.85);font-size:1.05rem;font-family:Cormorant Garamond,serif">Identify the country from its flag emoji. Faster answers earn more points.</p>
         <div class="name-row">
           <input type="text" class="input-field" id="flag-username-input" placeholder="your name..." maxlength="20"/>
-          <button class="btn btn-gold" onclick="startFlagGame()">Start →</button>
+          <button class="btn btn-gold" onclick="(function(){var n=document.getElementById('flag-username-input').value.trim();if(!n){return;}flagState.username=n;flagState.score=0;flagState.round=0;flagState.roundsWon=0;flagState.usedFlags=[];document.getElementById('flag-username-card').style.display='none';document.getElementById('flag-active-game').style.display='block';document.getElementById('flag-game-over').style.display='none';nextFlagRound();})()">Start →</button>
         </div>
       </div>
     </div>
