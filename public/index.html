@@ -1057,10 +1057,7 @@ function showHome() {
   document.getElementById('home-view').style.display = 'block';
   document.getElementById('witw-view').style.display = 'none';
   document.getElementById('capital-view').style.display = 'none';
-  loadLeaderboard();
-checkApiStatus();
-loadActivityFeed();
-setInterval(loadActivityFeed, 15000);
+  
 
 async function checkApiStatus() {
   const endpoints = [
@@ -1371,59 +1368,11 @@ async function submitScore(username, score, rounds_won) {
       body: JSON.stringify({ username, score, rounds_won })
     });
     showToast('Score saved to leaderboard!');
-    loadLeaderboard();
-checkApiStatus();
-loadActivityFeed();
-setInterval(loadActivityFeed, 15000);
+    
 
-async function checkApiStatus() {
-  const endpoints = [
-    { id: 'api-leaderboard', url: '/leaderboard', method: 'GET' },
-    { id: 'api-info', url: '/info', method: 'GET' },
-    { id: 'api-performance', url: '/performance', method: 'GET' },
-    { id: 'api-history', url: '/history', method: 'GET' },
-  ];
-  for (const ep of endpoints) {
-    try {
-      const r = await fetch(API_BASE + ep.url);
-      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
-    } catch(e) {
-      document.getElementById(ep.id)?.classList.add('offline');
-    }
-  }
-  // /add and /remove are always shown as green (can't test without side effects)
-}
 
-async function loadActivityFeed() {
-  const feed = document.getElementById('activity-feed');
-  if (!feed) return;
-  try {
-    const res = await fetch(API_BASE + '/history');
-    const data = await res.json();
-    const rows = (data.data || []).slice(0, 5);
-    if (rows.length === 0) {
-      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
-      return;
-    }
-    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
-    feed.innerHTML = rows.map(row => {
-      const initials = cleanName(row.username).slice(0,2).toUpperCase();
-      const timeAgo = getTimeAgo(row.created_at);
-      const isCapital = row.username.includes('[Cap');
-      return `<div class="activity-item">
-        <div class="activity-avatar">${initials}</div>
-        <div class="activity-text">
-          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
-          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
-          <span class="activity-score">${row.score} pts</span>
-        </div>
-        <div class="activity-time">${timeAgo}</div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
-  }
-}
+
+
 
 function getTimeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -1496,59 +1445,11 @@ async function removeScore(id) {
       body: JSON.stringify({ id })
     });
     const data = await res.json();
-    if (data.success) { showToast('Entry removed'); loadLeaderboard();
-checkApiStatus();
-loadActivityFeed();
-setInterval(loadActivityFeed, 15000);
+    if (data.success) { showToast('Entry removed'); 
 
-async function checkApiStatus() {
-  const endpoints = [
-    { id: 'api-leaderboard', url: '/leaderboard', method: 'GET' },
-    { id: 'api-info', url: '/info', method: 'GET' },
-    { id: 'api-performance', url: '/performance', method: 'GET' },
-    { id: 'api-history', url: '/history', method: 'GET' },
-  ];
-  for (const ep of endpoints) {
-    try {
-      const r = await fetch(API_BASE + ep.url);
-      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
-    } catch(e) {
-      document.getElementById(ep.id)?.classList.add('offline');
-    }
-  }
-  // /add and /remove are always shown as green (can't test without side effects)
-}
 
-async function loadActivityFeed() {
-  const feed = document.getElementById('activity-feed');
-  if (!feed) return;
-  try {
-    const res = await fetch(API_BASE + '/history');
-    const data = await res.json();
-    const rows = (data.data || []).slice(0, 5);
-    if (rows.length === 0) {
-      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
-      return;
-    }
-    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
-    feed.innerHTML = rows.map(row => {
-      const initials = cleanName(row.username).slice(0,2).toUpperCase();
-      const timeAgo = getTimeAgo(row.created_at);
-      const isCapital = row.username.includes('[Cap');
-      return `<div class="activity-item">
-        <div class="activity-avatar">${initials}</div>
-        <div class="activity-text">
-          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
-          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
-          <span class="activity-score">${row.score} pts</span>
-        </div>
-        <div class="activity-time">${timeAgo}</div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
-  }
-}
+
+
 
 function getTimeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -1565,59 +1466,11 @@ function toggleAdmin() {
     isAdmin = false;
     document.getElementById('admin-toggle-btn').textContent = '⚙ admin';
     showToast('Admin mode off');
-    loadLeaderboard();
-checkApiStatus();
-loadActivityFeed();
-setInterval(loadActivityFeed, 15000);
+    
 
-async function checkApiStatus() {
-  const endpoints = [
-    { id: 'api-leaderboard', url: '/leaderboard', method: 'GET' },
-    { id: 'api-info', url: '/info', method: 'GET' },
-    { id: 'api-performance', url: '/performance', method: 'GET' },
-    { id: 'api-history', url: '/history', method: 'GET' },
-  ];
-  for (const ep of endpoints) {
-    try {
-      const r = await fetch(API_BASE + ep.url);
-      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
-    } catch(e) {
-      document.getElementById(ep.id)?.classList.add('offline');
-    }
-  }
-  // /add and /remove are always shown as green (can't test without side effects)
-}
 
-async function loadActivityFeed() {
-  const feed = document.getElementById('activity-feed');
-  if (!feed) return;
-  try {
-    const res = await fetch(API_BASE + '/history');
-    const data = await res.json();
-    const rows = (data.data || []).slice(0, 5);
-    if (rows.length === 0) {
-      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
-      return;
-    }
-    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
-    feed.innerHTML = rows.map(row => {
-      const initials = cleanName(row.username).slice(0,2).toUpperCase();
-      const timeAgo = getTimeAgo(row.created_at);
-      const isCapital = row.username.includes('[Cap');
-      return `<div class="activity-item">
-        <div class="activity-avatar">${initials}</div>
-        <div class="activity-text">
-          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
-          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
-          <span class="activity-score">${row.score} pts</span>
-        </div>
-        <div class="activity-time">${timeAgo}</div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
-  }
-}
+
+
 
 function getTimeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -1632,59 +1485,11 @@ function getTimeAgo(dateStr) {
       isAdmin = true;
       document.getElementById('admin-toggle-btn').textContent = '⚙ admin ✓';
       showToast('Admin mode on');
-      loadLeaderboard();
-checkApiStatus();
-loadActivityFeed();
-setInterval(loadActivityFeed, 15000);
+      
 
-async function checkApiStatus() {
-  const endpoints = [
-    { id: 'api-leaderboard', url: '/leaderboard', method: 'GET' },
-    { id: 'api-info', url: '/info', method: 'GET' },
-    { id: 'api-performance', url: '/performance', method: 'GET' },
-    { id: 'api-history', url: '/history', method: 'GET' },
-  ];
-  for (const ep of endpoints) {
-    try {
-      const r = await fetch(API_BASE + ep.url);
-      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
-    } catch(e) {
-      document.getElementById(ep.id)?.classList.add('offline');
-    }
-  }
-  // /add and /remove are always shown as green (can't test without side effects)
-}
 
-async function loadActivityFeed() {
-  const feed = document.getElementById('activity-feed');
-  if (!feed) return;
-  try {
-    const res = await fetch(API_BASE + '/history');
-    const data = await res.json();
-    const rows = (data.data || []).slice(0, 5);
-    if (rows.length === 0) {
-      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
-      return;
-    }
-    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
-    feed.innerHTML = rows.map(row => {
-      const initials = cleanName(row.username).slice(0,2).toUpperCase();
-      const timeAgo = getTimeAgo(row.created_at);
-      const isCapital = row.username.includes('[Cap');
-      return `<div class="activity-item">
-        <div class="activity-avatar">${initials}</div>
-        <div class="activity-text">
-          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
-          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
-          <span class="activity-score">${row.score} pts</span>
-        </div>
-        <div class="activity-time">${timeAgo}</div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
-  }
-}
+
+
 
 function getTimeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -1712,54 +1517,9 @@ checkApiStatus();
 loadActivityFeed();
 setInterval(loadActivityFeed, 15000);
 
-async function checkApiStatus() {
-  const endpoints = [
-    { id: 'api-leaderboard', url: '/leaderboard', method: 'GET' },
-    { id: 'api-info', url: '/info', method: 'GET' },
-    { id: 'api-performance', url: '/performance', method: 'GET' },
-    { id: 'api-history', url: '/history', method: 'GET' },
-  ];
-  for (const ep of endpoints) {
-    try {
-      const r = await fetch(API_BASE + ep.url);
-      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
-    } catch(e) {
-      document.getElementById(ep.id)?.classList.add('offline');
-    }
-  }
-  // /add and /remove are always shown as green (can't test without side effects)
-}
 
-async function loadActivityFeed() {
-  const feed = document.getElementById('activity-feed');
-  if (!feed) return;
-  try {
-    const res = await fetch(API_BASE + '/history');
-    const data = await res.json();
-    const rows = (data.data || []).slice(0, 5);
-    if (rows.length === 0) {
-      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
-      return;
-    }
-    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
-    feed.innerHTML = rows.map(row => {
-      const initials = cleanName(row.username).slice(0,2).toUpperCase();
-      const timeAgo = getTimeAgo(row.created_at);
-      const isCapital = row.username.includes('[Cap');
-      return `<div class="activity-item">
-        <div class="activity-avatar">${initials}</div>
-        <div class="activity-text">
-          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
-          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
-          <span class="activity-score">${row.score} pts</span>
-        </div>
-        <div class="activity-time">${timeAgo}</div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
-  }
-}
+
+
 
 function getTimeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);

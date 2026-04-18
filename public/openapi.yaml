@@ -5,9 +5,9 @@ info:
   version: 1.0.0
 
 servers:
-  - url: https://whereintheworld.up.railway.app
+  - url: https://your-railway-url.up.railway.app
     description: Production server
-  - url: http://localhost:8080
+  - url: http://localhost:3000
     description: Local development
 
 paths:
@@ -57,24 +57,39 @@ paths:
   /remove:
     delete:
       summary: Remove an entry from the leaderboard
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                id:
-                  type: integer
-                  example: 1
-                username:
-                  type: string
-                  example: "Vansh"
+      description: >
+        Removes an entry by id or username.
+        Send a JSON body with either `id` (integer) or `username` (string).
+        Example body: `{"id": 1}` or `{"username": "Vansh"}`
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          description: ID of the entry to remove
+          example: 1
+        - in: query
+          name: username
+          schema:
+            type: string
+          description: Username of the entry to remove
+          example: "Vansh"
       responses:
         '200':
           description: Entry removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
         '404':
           description: Entry not found
+        '400':
+          description: No id or username provided
 
   /leaderboard:
     get:
