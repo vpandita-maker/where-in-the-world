@@ -1,15 +1,13 @@
 openapi: 3.0.0
 info:
-  title: Where in the World — Leaderboard API
-  description: REST API for a geography trivia game leaderboard with scoring, statistics, and performance tracking.
+  title: Where in the World - Leaderboard API
   version: 1.0.0
-
+  description: REST API for a geography trivia game leaderboard.
 servers:
   - url: https://whereintheworld.up.railway.app
     description: Production server
   - url: http://localhost:3000
     description: Local development
-
 paths:
   /add:
     post:
@@ -20,47 +18,25 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - username
-                - score
+              required: [username, score]
               properties:
                 username:
                   type: string
-                  example: "Vansh"
+                  example: Vansh
                 score:
                   type: integer
-                  example: 280
+                  example: 450
+                rounds_won:
+                  type: integer
+                  example: 5
       responses:
         '201':
           description: Entry added successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      username:
-                        type: string
-                      score:
-                        type: integer
         '400':
-          description: Missing or invalid fields
-
+          description: Invalid input
   /remove:
     delete:
       summary: Remove an entry from the leaderboard
-      description: >
-        Removes an entry by id or username.
-        Send a JSON body with either `id` (integer) or `username` (string).
-        Example body: `{"id": 1}` or `{"username": "Vansh"}`
       requestBody:
         required: true
         content:
@@ -74,144 +50,45 @@ paths:
                 username:
                   type: string
                   example: Vansh
-      parameters:
-        - in: query
-          name: dummy_ignore
-          schema:
-            type: string
-          description: ignored
-          schema:
-            type: string
-          description: Username of the entry to remove
-          example: "Vansh"
       responses:
         '200':
           description: Entry removed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-        '404':
-          description: Entry not found
         '400':
           description: No id or username provided
-
+        '404':
+          description: Entry not found
   /leaderboard:
     get:
       summary: Returns the top 10 leaderboard positions
       responses:
         '200':
           description: Top 10 scores
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                        username:
-                          type: string
-                        score:
-                          type: integer
-                        created_at:
-                          type: string
-                          format: date-time
-
   /info:
     get:
       summary: Returns quantitative statistics for all entries
       responses:
         '200':
-          description: Statistics including mean, median, quartiles, std deviation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: object
-                    properties:
-                      count:
-                        type: integer
-                      mean:
-                        type: number
-                      median:
-                        type: number
-                      min:
-                        type: integer
-                      max:
-                        type: integer
-                      q1:
-                        type: number
-                      q3:
-                        type: number
-                      std_deviation:
-                        type: number
-                      range:
-                        type: integer
-
+          description: Stats including mean, median, std deviation, quartiles
   /performance:
     get:
       summary: Returns average endpoint execution time in milliseconds
       responses:
         '200':
-          description: Performance metrics per endpoint
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: object
-                    additionalProperties:
-                      type: object
-                      properties:
-                        avg_ms:
-                          type: number
-                        calls:
-                          type: integer
-                        min_ms:
-                          type: integer
-                        max_ms:
-                          type: integer
-
+          description: Performance data per endpoint
   /history:
     get:
       summary: Returns all score submissions with timestamps (bonus endpoint)
       parameters:
-        - name: from
-          in: query
+        - in: query
+          name: username
           schema:
             type: string
-            format: date
-          example: "2025-01-01"
-        - name: to
-          in: query
+          description: Filter by username
+        - in: query
+          name: date
           schema:
             type: string
-            format: date
-          example: "2025-12-31"
-        - name: username
-          in: query
-          schema:
-            type: string
-          example: "Vansh"
+          description: Filter by date
       responses:
         '200':
-          description: Filtered history of all submissions
+          description: Full history with timestamps
