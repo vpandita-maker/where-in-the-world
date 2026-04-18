@@ -111,3 +111,8 @@ DATABASE_URL=your_postgres_url node server.js
 - Missing fields return descriptive 400 errors
 - 404 returned when removing non-existent entries
 - Performance metrics persist across server restarts (stored in PostgreSQL)
+
+## Contributors
+
+- Yashna Reddy Pandugala - Sophomore, Finance and Informatics
+- Vansh Pandita - Sophomore, Informatics and Accounting
