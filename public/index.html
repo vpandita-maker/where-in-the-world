@@ -1479,6 +1479,10 @@ function toggleAdmin() {
     isAdmin = false;
     document.getElementById('admin-toggle-btn').textContent = '⚙ admin';
     showToast('Admin mode off');
+    ['pod1-remove','pod2-remove','pod3-remove'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
     loadLeaderboard();
   } else {
     const pass = prompt('Admin password:');
@@ -1492,7 +1496,6 @@ function toggleAdmin() {
     }
   }
 }
-
 function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function showToast(msg) {
@@ -1506,8 +1509,53 @@ checkApiStatus();
 loadActivityFeed();
 setInterval(loadActivityFeed, 15000);
 
+async function checkApiStatus() {
+  const endpoints = [
+    { id: 'api-leaderboard', url: '/leaderboard' },
+    { id: 'api-info', url: '/info' },
+    { id: 'api-performance', url: '/performance' },
+    { id: 'api-history', url: '/history' },
+  ];
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(API_BASE + ep.url);
+      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
+    } catch(e) {
+      document.getElementById(ep.id)?.classList.add('offline');
+    }
+  }
+}
 
-
+async function loadActivityFeed() {
+  const feed = document.getElementById('activity-feed');
+  if (!feed) return;
+  try {
+    const res = await fetch(API_BASE + '/history');
+    const data = await res.json();
+    const rows = (data.data || []).slice(0, 5);
+    if (rows.length === 0) {
+      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
+      return;
+    }
+    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
+    feed.innerHTML = rows.map(row => {
+      const initials = cleanName(row.username).slice(0,2).toUpperCase();
+      const timeAgo = getTimeAgo(row.created_at);
+      const isCapital = row.username.includes('[Cap');
+      return `<div class="activity-item">
+        <div class="activity-avatar">${initials}</div>
+        <div class="activity-text">
+          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
+          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
+          <span class="activity-score">${row.score} pts</span>
+        </div>
+        <div class="activity-time">${timeAgo}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
+  }
+}
 
 
 function getTimeAgo(dateStr) {
