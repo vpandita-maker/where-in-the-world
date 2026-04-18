@@ -7,17 +7,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
   :root {
-    --bg: #0a0e1a;
-    --surface: #111827;
-    --surface2: #1a2235;
-    --border: #1e2d45;
-    --gold: #f0c040;
-    --gold2: #e6a817;
-    --teal: #38bdf8;
-    --green: #4ade80;
-    --red: #f87171;
-    --text: #e8eaf0;
-    --muted: #6b7a99;
+    --bg: #ffffff;
+    --surface: #f4f4f4;
+    --surface2: #e8e8e8;
+    --border: #d0d0d0;
+    --gold: #c9860a;
+    --gold2: #a86e08;
+    --teal: #0284c7;
+    --green: #16a34a;
+    --red: #dc2626;
+    --text: #111111;
+    --muted: #555555;
     --radius: 14px;
   }
 
@@ -464,7 +464,8 @@
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('game')">▶ Play</button>
+    <button class="tab-btn active" onclick="switchTab('game')">🌍 Where in the World</button>
+    <button class="tab-btn" onclick="switchTab('capital')">🏛 Capital Quiz</button>
     <button class="tab-btn" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
   </div>
 
@@ -528,6 +529,60 @@
       <p id="go-summary" style="margin-bottom:28px"></p>
       <div class="btn-row">
         <button class="btn btn-gold" onclick="restartGame()">Play Again</button>
+        <button class="btn btn-ghost" onclick="switchTab('leaderboard')">View Leaderboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAPITAL QUIZ PANEL -->
+  <div class="panel" id="panel-capital">
+
+    <div class="card" id="cap-username-card">
+      <div style="margin-bottom:16px">
+        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:6px">🏛 Capital City Quiz</div>
+        <div style="color:var(--muted);font-size:0.85rem">Name the capital city of each country. 5 rounds, 30 seconds each.</div>
+      </div>
+      <div class="username-row">
+        <input type="text" id="cap-username-input" placeholder="your name..." maxlength="20"/>
+        <button class="btn btn-gold" onclick="startCapitalGame()">Start →</button>
+      </div>
+    </div>
+
+    <div id="cap-active-game" style="display:none">
+      <div class="timer-label"><span id="cap-timer-display">30</span>s remaining</div>
+      <div class="timer-bar"><div class="timer-fill" id="cap-timer-fill" style="width:100%"></div></div>
+      <div class="score-bar">
+        <div>
+          <div class="score-label">Score</div>
+          <div class="score-val" id="cap-score-display">0</div>
+        </div>
+        <div class="round-pill" id="cap-round-display">Round 1 / 5</div>
+        <div style="text-align:right">
+          <div class="score-label">Correct</div>
+          <div style="font-family:'DM Mono',monospace;font-size:1.3rem;color:var(--green)" id="cap-correct-display">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="clues-header">
+          <h3 id="cap-question">What is the capital of <span id="cap-country" style="color:var(--gold)">...</span>?</h3>
+        </div>
+        <div class="guess-row" style="margin-top:20px">
+          <input type="text" id="cap-guess-input" placeholder="Type capital city..." onkeydown="if(event.key==='Enter') submitCapitalGuess()"/>
+          <button class="btn btn-gold" onclick="submitCapitalGuess()">Guess →</button>
+        </div>
+        <div class="feedback" id="cap-feedback"></div>
+      </div>
+    </div>
+
+    <div id="cap-game-over" style="display:none;text-align:center;padding:40px 20px">
+      <div style="font-size:3rem;margin-bottom:12px">🏛</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:2rem;color:var(--gold)">Game Over!</h2>
+      <p id="cap-go-name">Well played!</p>
+      <div class="final-score" id="cap-final-score">0 pts</div>
+      <p id="cap-go-summary" style="margin-bottom:28px"></p>
+      <div class="btn-row">
+        <button class="btn btn-gold" onclick="restartCapitalGame()">Play Again</button>
         <button class="btn btn-ghost" onclick="switchTab('leaderboard')">View Leaderboard</button>
       </div>
     </div>
@@ -719,9 +774,14 @@ let state = {
 // ─── TAB SWITCHING ───────────────────────────────────────
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
-    b.classList.toggle('active', (i===0 && tab==='game') || (i===1 && tab==='leaderboard'));
+    b.classList.toggle('active',
+      (i===0 && tab==='game') ||
+      (i===1 && tab==='capital') ||
+      (i===2 && tab==='leaderboard')
+    );
   });
   document.getElementById('panel-game').classList.toggle('active', tab==='game');
+  document.getElementById('panel-capital').classList.toggle('active', tab==='capital');
   document.getElementById('panel-leaderboard').classList.toggle('active', tab==='leaderboard');
   if (tab === 'leaderboard') loadLeaderboard();
 }
@@ -1035,6 +1095,167 @@ function showToast(msg) {
 
 // Init
 loadLeaderboard();
+
+// ─── CAPITAL QUIZ ─────────────────────────────────────────
+const CAPITALS = [
+  { country: "France", capital: "Paris" },
+  { country: "Japan", capital: "Tokyo" },
+  { country: "Brazil", capital: "Brasilia" },
+  { country: "Australia", capital: "Canberra" },
+  { country: "Canada", capital: "Ottawa" },
+  { country: "Germany", capital: "Berlin" },
+  { country: "India", capital: "New Delhi" },
+  { country: "China", capital: "Beijing" },
+  { country: "Italy", capital: "Rome" },
+  { country: "Spain", capital: "Madrid" },
+  { country: "Mexico", capital: "Mexico City" },
+  { country: "Argentina", capital: "Buenos Aires" },
+  { country: "Egypt", capital: "Cairo" },
+  { country: "Nigeria", capital: "Abuja" },
+  { country: "Kenya", capital: "Nairobi" },
+  { country: "South Africa", capital: "Pretoria" },
+  { country: "Saudi Arabia", capital: "Riyadh" },
+  { country: "Turkey", capital: "Ankara" },
+  { country: "Thailand", capital: "Bangkok" },
+  { country: "Vietnam", capital: "Hanoi" },
+  { country: "Sweden", capital: "Stockholm" },
+  { country: "Norway", capital: "Oslo" },
+  { country: "Portugal", capital: "Lisbon" },
+  { country: "Greece", capital: "Athens" },
+  { country: "Netherlands", capital: "Amsterdam" },
+  { country: "Poland", capital: "Warsaw" },
+  { country: "Ukraine", capital: "Kyiv" },
+  { country: "Pakistan", capital: "Islamabad" },
+  { country: "Bangladesh", capital: "Dhaka" },
+  { country: "Indonesia", capital: "Jakarta" }
+];
+
+let capState = {
+  username: '',
+  score: 0,
+  round: 0,
+  roundsWon: 0,
+  currentQ: null,
+  answered: false,
+  usedCountries: [],
+  timerInterval: null,
+  timeLeft: 30
+};
+
+function startCapitalGame() {
+  const name = document.getElementById('cap-username-input').value.trim();
+  if (!name) { showToast('Enter your name first!'); return; }
+  capState.username = name;
+  capState.score = 0;
+  capState.round = 0;
+  capState.roundsWon = 0;
+  capState.usedCountries = [];
+
+  document.getElementById('cap-username-card').style.display = 'none';
+  document.getElementById('cap-active-game').style.display = 'block';
+  document.getElementById('cap-game-over').style.display = 'none';
+
+  nextCapitalRound();
+}
+
+function nextCapitalRound() {
+  if (capState.round >= TOTAL_ROUNDS) { endCapitalGame(); return; }
+  capState.round++;
+  capState.answered = false;
+
+  const remaining = CAPITALS.filter(c => !capState.usedCountries.includes(c.country));
+  const pick = remaining[Math.floor(Math.random() * remaining.length)];
+  capState.usedCountries.push(pick.country);
+  capState.currentQ = pick;
+
+  document.getElementById('cap-country').textContent = pick.country;
+  document.getElementById('cap-guess-input').value = '';
+  document.getElementById('cap-feedback').className = 'feedback';
+  document.getElementById('cap-score-display').textContent = capState.score;
+  document.getElementById('cap-round-display').textContent = `Round ${capState.round} / ${TOTAL_ROUNDS}`;
+  document.getElementById('cap-correct-display').textContent = capState.roundsWon;
+
+  startCapTimer();
+}
+
+function startCapTimer() {
+  clearCapTimer();
+  capState.timeLeft = 30;
+  updateCapTimerUI();
+  capState.timerInterval = setInterval(() => {
+    capState.timeLeft--;
+    updateCapTimerUI();
+    if (capState.timeLeft <= 0) {
+      clearCapTimer();
+      if (!capState.answered) {
+        capState.answered = true;
+        showCapFeedback(`⏱ Time's up! The capital was ${capState.currentQ.capital}.`, 'wrong');
+        setTimeout(() => nextCapitalRound(), 2000);
+      }
+    }
+  }, 1000);
+}
+
+function clearCapTimer() {
+  if (capState.timerInterval) { clearInterval(capState.timerInterval); capState.timerInterval = null; }
+}
+
+function updateCapTimerUI() {
+  const pct = (capState.timeLeft / 30) * 100;
+  const fill = document.getElementById('cap-timer-fill');
+  const label = document.getElementById('cap-timer-display');
+  if (fill) { fill.style.width = pct + '%'; fill.className = 'timer-fill' + (capState.timeLeft <= 10 ? ' danger' : ''); }
+  if (label) label.textContent = capState.timeLeft;
+}
+
+function submitCapitalGuess() {
+  if (capState.answered) return;
+  const guess = document.getElementById('cap-guess-input').value.trim();
+  if (!guess) return;
+
+  const correct = guess.toLowerCase() === capState.currentQ.capital.toLowerCase();
+  capState.answered = true;
+  clearCapTimer();
+
+  if (correct) {
+    const pts = Math.max(100 - (30 - capState.timeLeft) * 2, 10);
+    capState.score += pts;
+    capState.roundsWon++;
+    showCapFeedback(`✓ Correct! +${pts} points`, 'correct');
+  } else {
+    showCapFeedback(`✗ Wrong! The capital is ${capState.currentQ.capital}.`, 'wrong');
+  }
+
+  document.getElementById('cap-score-display').textContent = capState.score;
+  document.getElementById('cap-correct-display').textContent = capState.roundsWon;
+  setTimeout(() => nextCapitalRound(), 2200);
+}
+
+function showCapFeedback(msg, type) {
+  const el = document.getElementById('cap-feedback');
+  el.textContent = msg;
+  el.className = `feedback ${type}`;
+}
+
+function endCapitalGame() {
+  clearCapTimer();
+  document.getElementById('cap-active-game').style.display = 'none';
+  document.getElementById('cap-game-over').style.display = 'block';
+  document.getElementById('cap-final-score').textContent = `${capState.score} pts`;
+  document.getElementById('cap-go-name').textContent = `Well played, ${capState.username}!`;
+  document.getElementById('cap-go-summary').textContent = `You got ${capState.roundsWon} out of ${TOTAL_ROUNDS} capitals correct.`;
+  submitScore(capState.username + ' [Capital]', capState.score, capState.roundsWon);
+}
+
+function restartCapitalGame() {
+  document.getElementById('cap-game-over').style.display = 'none';
+  document.getElementById('cap-active-game').style.display = 'block';
+  capState.score = 0;
+  capState.round = 0;
+  capState.roundsWon = 0;
+  capState.usedCountries = [];
+  nextCapitalRound();
+}
 </script>
 </body>
 </html>
