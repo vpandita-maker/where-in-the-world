@@ -48,6 +48,7 @@ app.post('/add', async (req, res) => {
   }
   const clean = String(username).trim().slice(0, 30);
   const numScore = Number(score);
+  if (numScore < 0) return res.status(400).json({ success: false, error: "score must be non-negative" });
   const numRounds = Number(rounds_won) || 0;
   if (!clean || isNaN(numScore)) {
     return res.status(400).json({ success: false, error: 'invalid username or score' });
