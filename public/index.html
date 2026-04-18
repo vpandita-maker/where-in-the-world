@@ -1708,6 +1708,22 @@ function toggleAdmin() {
       if (el) el.style.display = 'none';
     });
     
+
+
+loadLeaderboard();
+  } else {
+    const pass = prompt('Admin password:');
+    if (pass === ADMIN_PASS) {
+      isAdmin = true;
+      document.getElementById('admin-toggle-btn').textContent = '⚙ admin ✓';
+      showToast('Admin mode on');
+      loadLeaderboard();
+    } else {
+      showToast('Wrong password');
+    }
+  }
+}
+
 async function loadStatsDashboard() {
   try {
     const r = await fetch('/info');
@@ -1753,21 +1769,6 @@ async function loadStatsDashboard() {
       }
     }
   } catch(e) { console.error('Stats dashboard error:', e); }
-}
-
-
-loadLeaderboard();
-  } else {
-    const pass = prompt('Admin password:');
-    if (pass === ADMIN_PASS) {
-      isAdmin = true;
-      document.getElementById('admin-toggle-btn').textContent = '⚙ admin ✓';
-      showToast('Admin mode on');
-      loadLeaderboard();
-    } else {
-      showToast('Wrong password');
-    }
-  }
 }
 function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
