@@ -671,17 +671,6 @@ header h1 {
         <button class="play-btn teal-btn" onclick="event.stopPropagation();showGame('capital')">Play Now →</button>
       </div>
 
-      <!-- Game 3 -->
-      <div class="bento-card game-card" style="border-top:3px solid var(--green)" onclick="showGame('flag')">
-        <div>
-          <span class="game-icon">🏳️</span>
-          <div class="game-title">Flag Quiz</div>
-          <div class="game-desc">Recognize flags from around the world. Name the country behind each flag emoji — speed is everything.</div>
-          <div class="game-badge" style="background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.2);color:var(--green)">5 rounds · 30s each</div>
-        </div>
-        <button class="play-btn" style="background:rgba(74,222,128,0.15);color:var(--green);border:1px solid rgba(74,222,128,0.3)" onclick="event.stopPropagation();showGame('flag')">Play Now →</button>
-      </div>
-
       <!-- Leaderboard -->
       <div class="bento-card bento-leaderboard">
         <div class="lb-title">
@@ -910,64 +899,6 @@ header h1 {
       </div>
     </div>
   </div>
-
-  <!-- FLAG GAME VIEW -->
-  <div id="flag-view" style="display:none;max-width:700px;margin:0 auto">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
-      <button class="btn btn-ghost" onclick="showHome()" style="padding:8px 16px;font-size:0.82rem">← Back</button>
-      <span style="font-family:'Playfair Display',serif;font-size:1.2rem">🏳️ Flag Quiz</span>
-    </div>
-
-    <div class="game-panel" id="flag-username-card">
-      <div class="name-card">
-        <h2 style="font-family:Cinzel,serif;letter-spacing:0.05em;font-size:1.3rem">Know Your Flags?</h2>
-        <p style="color:rgba(200,215,245,0.85);font-size:1.05rem;font-family:Cormorant Garamond,serif">Identify the country from its flag emoji. Faster answers earn more points.</p>
-        <div class="name-row">
-          <input type="text" class="input-field" id="flag-username-input" placeholder="your name..." maxlength="20"/>
-          <button class="btn btn-gold" onclick="(function(){var n=document.getElementById('flag-username-input').value.trim();if(!n){return;}flagState.username=n;flagState.score=0;flagState.round=0;flagState.roundsWon=0;flagState.usedFlags=[];document.getElementById('flag-username-card').style.display='none';document.getElementById('flag-active-game').style.display='block';document.getElementById('flag-game-over').style.display='none';nextFlagRound();})()">Start →</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="flag-active-game" style="display:none">
-      <div class="game-panel">
-        <div class="timer-wrap">
-          <div class="timer-label"><span id="flag-timer-display">30</span>s remaining</div>
-          <div class="timer-bar"><div class="timer-fill" id="flag-timer-fill" style="width:100%"></div></div>
-        </div>
-        <div class="score-bar">
-          <div><div class="score-label">Score</div><div class="score-val" id="flag-score-display">0</div></div>
-          <div class="round-pill" id="flag-round-display">Round 1 / 5</div>
-          <div style="text-align:right"><div class="score-label">Correct</div><div style="font-family:'DM Mono',monospace;font-size:1.3rem;color:var(--green)" id="flag-correct-display">0</div></div>
-        </div>
-        <div style="text-align:center;padding:32px 0 24px">
-          <div id="flag-emoji" style="font-size:6rem;line-height:1;margin-bottom:16px">🏳️</div>
-          <div style="font-size:0.8rem;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.08em">What country is this flag?</div>
-        </div>
-        <div class="guess-row">
-          <input type="text" class="input-field" id="flag-guess-input" placeholder="Type country name..." onkeydown="if(event.key==='Enter') submitFlagGuess()"/>
-          <button class="btn btn-gold" onclick="submitFlagGuess()">Guess →</button>
-        </div>
-        <div class="feedback" id="flag-feedback"></div>
-      </div>
-    </div>
-
-    <div id="flag-game-over" style="display:none">
-      <div class="game-panel game-over-panel">
-        <div style="font-size:3rem;margin-bottom:12px">🏳️</div>
-        <h2>Game Over!</h2>
-        <p id="flag-go-name" style="color:var(--muted);margin-bottom:8px"></p>
-        <div class="final-score" id="flag-final-score">0 pts</div>
-        <p id="flag-go-summary" style="color:var(--muted);margin-bottom:28px"></p>
-        <div class="btn-row">
-          <button class="btn btn-gold" onclick="restartFlagGame()">Play Again</button>
-          <button class="btn btn-ghost" onclick="showHome()">Back to Home</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
 
 </div>
 
@@ -1202,7 +1133,6 @@ function showGame(type) {
   document.getElementById('home-view').style.display = 'none';
   document.getElementById('witw-view').style.display = type === 'witw' ? 'block' : 'none';
   document.getElementById('capital-view').style.display = type === 'capital' ? 'block' : 'none';
-  document.getElementById('flag-view').style.display = type === 'flag' ? 'block' : 'none';
 }
 
 function startGame() {
@@ -1563,144 +1493,6 @@ function toggleAdmin() {
       if (el) el.style.display = 'none';
     });
     
-// ─── FLAG QUIZ ──────────────────────────────────────────────
-const FLAGS = [
-  { flag: '🇦🇷', country: 'Argentina' },
-  { flag: '🇦🇺', country: 'Australia' },
-  { flag: '🇧🇷', country: 'Brazil' },
-  { flag: '🇨🇦', country: 'Canada' },
-  { flag: '🇨🇳', country: 'China' },
-  { flag: '🇩🇪', country: 'Germany' },
-  { flag: '🇪🇬', country: 'Egypt' },
-  { flag: '🇫🇷', country: 'France' },
-  { flag: '🇬🇧', country: 'United Kingdom' },
-  { flag: '🇬🇷', country: 'Greece' },
-  { flag: '🇮🇳', country: 'India' },
-  { flag: '🇮🇩', country: 'Indonesia' },
-  { flag: '🇮🇹', country: 'Italy' },
-  { flag: '🇯🇵', country: 'Japan' },
-  { flag: '🇰🇷', country: 'South Korea' },
-  { flag: '🇲🇽', country: 'Mexico' },
-  { flag: '🇳🇬', country: 'Nigeria' },
-  { flag: '🇵🇹', country: 'Portugal' },
-  { flag: '🇷🇺', country: 'Russia' },
-  { flag: '🇸🇦', country: 'Saudi Arabia' },
-  { flag: '🇿🇦', country: 'South Africa' },
-  { flag: '🇪🇸', country: 'Spain' },
-  { flag: '🇸🇪', country: 'Sweden' },
-  { flag: '🇹🇭', country: 'Thailand' },
-  { flag: '🇹🇷', country: 'Turkey' },
-  { flag: '🇺🇦', country: 'Ukraine' },
-  { flag: '🇺🇸', country: 'United States' },
-  { flag: '🇻🇳', country: 'Vietnam' },
-  { flag: '🇵🇰', country: 'Pakistan' },
-  { flag: '🇳🇱', country: 'Netherlands' }
-];
-
-let flagState = {
-  username: '', score: 0, round: 0, roundsWon: 0,
-  currentQ: null, answered: false, usedFlags: [],
-  timerInterval: null, timeLeft: 30
-};
-
-function startFlagGame() {
-  const name = document.getElementById('flag-username-input').value.trim();
-  if (!name) { showToast('Enter your name first!'); return; }
-  flagState.username = name;
-  flagState.score = 0; flagState.round = 0; flagState.roundsWon = 0; flagState.usedFlags = [];
-  document.getElementById('flag-username-card').style.display = 'none';
-  document.getElementById('flag-active-game').style.display = 'block';
-  document.getElementById('flag-game-over').style.display = 'none';
-  nextFlagRound();
-}
-
-function nextFlagRound() {
-  if (flagState.round >= TOTAL_ROUNDS) { endFlagGame(); return; }
-  flagState.round++;
-  flagState.answered = false;
-  const remaining = FLAGS.filter(f => !flagState.usedFlags.includes(f.flag));
-  const pick = remaining[Math.floor(Math.random() * remaining.length)];
-  flagState.usedFlags.push(pick.flag);
-  flagState.currentQ = pick;
-  document.getElementById('flag-emoji').textContent = pick.flag;
-  document.getElementById('flag-guess-input').value = '';
-  document.getElementById('flag-feedback').className = 'feedback';
-  document.getElementById('flag-score-display').textContent = flagState.score;
-  document.getElementById('flag-round-display').textContent = 'Round ' + flagState.round + ' / ' + TOTAL_ROUNDS;
-  document.getElementById('flag-correct-display').textContent = flagState.roundsWon;
-  startFlagTimer();
-}
-
-function startFlagTimer() {
-  clearFlagTimer();
-  flagState.timeLeft = 30;
-  updateFlagTimerUI();
-  flagState.timerInterval = setInterval(function() {
-    flagState.timeLeft--;
-    updateFlagTimerUI();
-    if (flagState.timeLeft <= 0) {
-      clearFlagTimer();
-      if (!flagState.answered) {
-        flagState.answered = true;
-        showFlagFeedback('Time is up! The answer was ' + flagState.currentQ.country + '.', 'wrong');
-        setTimeout(nextFlagRound, 2000);
-      }
-    }
-  }, 1000);
-}
-
-function clearFlagTimer() {
-  if (flagState.timerInterval) { clearInterval(flagState.timerInterval); flagState.timerInterval = null; }
-}
-
-function updateFlagTimerUI() {
-  var pct = (flagState.timeLeft / 30) * 100;
-  var fill = document.getElementById('flag-timer-fill');
-  var label = document.getElementById('flag-timer-display');
-  if (fill) { fill.style.width = pct + '%'; fill.className = 'timer-fill' + (flagState.timeLeft <= 10 ? ' danger' : ''); }
-  if (label) label.textContent = flagState.timeLeft;
-}
-
-function submitFlagGuess() {
-  if (flagState.answered) return;
-  var guess = document.getElementById('flag-guess-input').value.trim();
-  if (!guess) return;
-  var correct = guess.toLowerCase() === flagState.currentQ.country.toLowerCase();
-  flagState.answered = true; clearFlagTimer();
-  if (correct) {
-    var pts = Math.max(100 - (30 - flagState.timeLeft) * 2, 10);
-    flagState.score += pts; flagState.roundsWon++;
-    showFlagFeedback('Correct! +' + pts + ' points', 'correct');
-  } else {
-    showFlagFeedback('Wrong! That was ' + flagState.currentQ.country + '.', 'wrong');
-  }
-  document.getElementById('flag-score-display').textContent = flagState.score;
-  document.getElementById('flag-correct-display').textContent = flagState.roundsWon;
-  setTimeout(nextFlagRound, 2200);
-}
-
-function showFlagFeedback(msg, type) {
-  var el = document.getElementById('flag-feedback');
-  el.textContent = msg; el.className = 'feedback ' + type;
-}
-
-function endFlagGame() {
-  clearFlagTimer();
-  document.getElementById('flag-active-game').style.display = 'none';
-  document.getElementById('flag-game-over').style.display = 'block';
-  document.getElementById('flag-final-score').textContent = flagState.score + ' pts';
-  document.getElementById('flag-go-name').textContent = 'Well played, ' + flagState.username + '!';
-  document.getElementById('flag-go-summary').textContent = 'You got ' + flagState.roundsWon + ' out of ' + TOTAL_ROUNDS + ' flags correct.';
-  submitScore(flagState.username + ' [Flag]', flagState.score, flagState.roundsWon);
-}
-
-function restartFlagGame() {
-  document.getElementById('flag-game-over').style.display = 'none';
-  document.getElementById('flag-active-game').style.display = 'block';
-  flagState.score = 0; flagState.round = 0; flagState.roundsWon = 0; flagState.usedFlags = [];
-  nextFlagRound();
-}
-
 loadLeaderboard();
   } else {
     const pass = prompt('Admin password:');
