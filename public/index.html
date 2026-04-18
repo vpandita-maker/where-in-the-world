@@ -1595,6 +1595,9 @@ async function submitScore(username, score, rounds_won) {
       body: JSON.stringify({ username, score, rounds_won })
     });
     showToast('Score saved to leaderboard!');
+    loadLeaderboard();
+    loadStatsDashboard();
+    loadActivityFeed();
     
 
 
