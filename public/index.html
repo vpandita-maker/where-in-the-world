@@ -619,6 +619,206 @@ header h1 {
 .section-label { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; }
 
 @media (max-width: 540px) { .name-row { flex-direction: column; } .btn-row { flex-direction: column; } }
+
+/* ── STATS DASHBOARD ── */
+.stats-dashboard {
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.stats-dashboard-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+@media(max-width:768px){ .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+@media(max-width:480px){ .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+.stat-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 12px 10px;
+  text-align: center;
+}
+.stat-card .s-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-card .s-lbl {
+  font-size: 0.62rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.stat-card.teal .s-val { color: var(--teal); }
+.stat-card.green .s-val { color: var(--green); }
+
+/* Distribution bar */
+.dist-section { margin-top: 4px; }
+.dist-title {
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.dist-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 60px;
+}
+.dist-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-end;
+}
+.dist-bar {
+  width: 100%;
+  background: linear-gradient(180deg, var(--teal), rgba(56,189,248,0.3));
+  border-radius: 3px 3px 0 0;
+  min-height: 3px;
+  transition: height 0.6s ease;
+}
+.dist-label {
+  font-size: 0.55rem;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  white-space: nowrap;
+}
+
+
+/* ── LEADERBOARD REDESIGN ── */
+.bento-leaderboard {
+  background: linear-gradient(135deg, rgba(240,192,64,0.08) 0%, rgba(15,20,35,0.95) 40%, rgba(56,189,248,0.05) 100%) !important;
+  border: 1px solid rgba(240,192,64,0.25) !important;
+  border-top: 3px solid var(--gold) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.bento-leaderboard::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 120px;
+  background: radial-gradient(ellipse 80% 100% at 50% 0%, rgba(240,192,64,0.12), transparent);
+  pointer-events: none;
+}
+
+.lb-title {
+  font-family: 'Cinzel', serif !important;
+  font-size: 1.1rem !important;
+  letter-spacing: 0.12em !important;
+  color: var(--gold) !important;
+  text-transform: uppercase !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 20px !important;
+  padding-bottom: 14px !important;
+  border-bottom: 1px solid rgba(240,192,64,0.2) !important;
+}
+
+.lb-title span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lb-title span::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 20px;
+  background: var(--gold);
+  border-radius: 2px;
+}
+
+/* Podium enhancements */
+.podium {
+  background: rgba(240,192,64,0.04);
+  border: 1px solid rgba(240,192,64,0.1);
+  border-radius: 12px;
+  padding: 16px 8px 8px;
+  margin-bottom: 16px;
+}
+
+.podium-slot.first .podium-avatar {
+  background: linear-gradient(135deg, #f0c040, #e6a817) !important;
+  color: #0b0f1a !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 20px rgba(240,192,64,0.4) !important;
+}
+
+.podium-slot.second .podium-avatar {
+  background: linear-gradient(135deg, #94a3b8, #64748b) !important;
+  color: #fff !important;
+}
+
+.podium-slot.third .podium-avatar {
+  background: linear-gradient(135deg, #cd7f32, #a0522d) !important;
+  color: #fff !important;
+}
+
+/* Leaderboard rows */
+#lb-rest .lb-row {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(240,192,64,0.08) !important;
+  border-radius: 8px !important;
+  margin-bottom: 6px !important;
+  transition: all 0.15s !important;
+}
+
+#lb-rest .lb-row:hover {
+  background: rgba(240,192,64,0.06) !important;
+  border-color: rgba(240,192,64,0.2) !important;
+}
+
+.lb-rank {
+  color: var(--gold) !important;
+  font-family: 'DM Mono', monospace !important;
+  font-weight: 700 !important;
+}
+
+.lb-score {
+  color: var(--gold) !important;
+  font-family: 'DM Mono', monospace !important;
+  font-weight: 700 !important;
+}
+
+/* Crown on leaderboard header */
+.lb-crown {
+  font-size: 1.4rem;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-J1CRND6PWM"></script>
@@ -672,9 +872,34 @@ header h1 {
       </div>
 
       <!-- Leaderboard -->
+            <!-- Stats Dashboard -->
+      <div class="stats-dashboard" style="grid-column: 1 / -1;">
+        <div class="stats-dashboard-title">📊 Score Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="s-val" id="ds-players">—</div><div class="s-lbl">Players</div></div>
+          <div class="stat-card"><div class="s-val" id="ds-mean">—</div><div class="s-lbl">Mean</div></div>
+          <div class="stat-card"><div class="s-val" id="ds-median">—</div><div class="s-lbl">Median</div></div>
+          <div class="stat-card teal"><div class="s-val" id="ds-std">—</div><div class="s-lbl">Std Dev</div></div>
+          <div class="stat-card teal"><div class="s-val" id="ds-q1">—</div><div class="s-lbl">Q1 (25th %)</div></div>
+          <div class="stat-card teal"><div class="s-val" id="ds-q3">—</div><div class="s-lbl">Q3 (75th %)</div></div>
+          <div class="stat-card green"><div class="s-val" id="ds-high">—</div><div class="s-lbl">High Score</div></div>
+          <div class="stat-card green"><div class="s-val" id="ds-low">—</div><div class="s-lbl">Low Score</div></div>
+          <div class="stat-card"><div class="s-val" id="ds-range">—</div><div class="s-lbl">Range</div></div>
+          <div class="stat-card"><div class="s-val" id="ds-p25">—</div><div class="s-lbl">Top 25% ≥</div></div>
+          <div class="stat-card"><div class="s-val" id="ds-p75">—</div><div class="s-lbl">Top 75% ≥</div></div>
+          <div class="stat-card"><div class="s-val" id="ds-cv">—</div><div class="s-lbl">Coeff Var</div></div>
+        </div>
+        <div class="dist-section">
+          <div class="dist-title">Score Distribution</div>
+          <div class="dist-bars" id="dist-bars">
+            <div style="color:var(--muted);font-size:0.8rem;margin:auto">Loading...</div>
+          </div>
+        </div>
+      </div>
+
       <div class="bento-card bento-leaderboard">
         <div class="lb-title">
-          <span>🏆 Leaderboard</span>
+          <span><span class="lb-crown">👑</span> Leaderboard</span>
           <button class="lb-refresh" onclick="loadLeaderboard()" title="Refresh">↻</button>
         </div>
 
@@ -708,16 +933,6 @@ header h1 {
 
         <div class="lb-rest" id="lb-rest">
           <div class="lb-empty">Loading...</div>
-        </div>
-
-        <!-- Stats -->
-        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--glass-border)">
-          <div class="stats-bento" style="grid-template-columns:1fr 1fr;gap:8px">
-            <div class="stat-tile"><div class="val" id="stat-players">—</div><div class="lbl">Players</div></div>
-            <div class="stat-tile"><div class="val" id="stat-high">—</div><div class="lbl">High Score</div></div>
-            <div class="stat-tile"><div class="val" id="stat-avg">—</div><div class="lbl">Mean</div></div>
-            <div class="stat-tile"><div class="val" id="stat-median">—</div><div class="lbl">Median</div></div>
-          </div>
         </div>
       </div>
     </div>
@@ -1493,6 +1708,54 @@ function toggleAdmin() {
       if (el) el.style.display = 'none';
     });
     
+async function loadStatsDashboard() {
+  try {
+    const r = await fetch('/info');
+    const d = await r.json();
+    if (!d.success) return;
+    const s = d.data;
+    document.getElementById('ds-players').textContent = s.count || '—';
+    document.getElementById('ds-mean').textContent = s.mean ? Math.round(s.mean) : '—';
+    document.getElementById('ds-median').textContent = s.median || '—';
+    document.getElementById('ds-std').textContent = s.std_deviation ? Math.round(s.std_deviation) : '—';
+    document.getElementById('ds-q1').textContent = s.q1 || '—';
+    document.getElementById('ds-q3').textContent = s.q3 || '—';
+    document.getElementById('ds-high').textContent = s.max || '—';
+    document.getElementById('ds-low').textContent = s.min || '—';
+    document.getElementById('ds-range').textContent = s.range || '—';
+    document.getElementById('ds-p25').textContent = s.q3 || '—';
+    document.getElementById('ds-p75').textContent = s.q1 || '—';
+    const cv = s.mean && s.std_deviation ? ((s.std_deviation / s.mean) * 100).toFixed(0) + '%' : '—';
+    document.getElementById('ds-cv').textContent = cv;
+
+    // Build distribution bars
+    if (s.min !== undefined && s.max !== undefined && s.count > 0) {
+      const hr = await fetch('/history');
+      const hd = await hr.json();
+      if (hd.success && hd.data.length > 0) {
+        const scores = hd.data.map(x => x.score);
+        const buckets = 8;
+        const bMin = Math.min(...scores);
+        const bMax = Math.max(...scores);
+        const bSize = (bMax - bMin) / buckets || 1;
+        const counts = Array(buckets).fill(0);
+        scores.forEach(sc => {
+          const bi = Math.min(Math.floor((sc - bMin) / bSize), buckets - 1);
+          counts[bi]++;
+        });
+        const maxCount = Math.max(...counts) || 1;
+        const barsEl = document.getElementById('dist-bars');
+        barsEl.innerHTML = counts.map((cnt, i) => {
+          const pct = Math.round((cnt / maxCount) * 100);
+          const label = Math.round(bMin + i * bSize);
+          return '<div class="dist-bar-wrap"><div class="dist-bar" style="height:' + Math.max(pct, 3) + '%"></div><div class="dist-label">' + label + '</div></div>';
+        }).join('');
+      }
+    }
+  } catch(e) { console.error('Stats dashboard error:', e); }
+}
+
+
 loadLeaderboard();
   } else {
     const pass = prompt('Admin password:');
@@ -1515,6 +1778,7 @@ function showToast(msg) {
 }
 
 loadLeaderboard();
+loadStatsDashboard();
 checkApiStatus();
 loadActivityFeed();
 setInterval(loadActivityFeed, 15000);
