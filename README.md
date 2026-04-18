@@ -1,4 +1,4 @@
-# 🌍 Where in the World?
+# 🌍 Where in the World? - CASE 1 SUBMISSION 
 ### Geography Trivia Leaderboard — REST API + Full Stack Web App
 
 A real-time geography trivia platform with two games, a persistent global leaderboard, live statistics, and a fully documented REST API.
