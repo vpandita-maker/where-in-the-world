@@ -348,6 +348,32 @@
   }
   .lb-delete:hover { background: rgba(248,113,113,0.15); border-color: var(--red); }
   .lb-empty { text-align: center; color: var(--muted); padding: 40px; font-family: 'DM Mono', monospace; font-size: 0.85rem; }
+  .admin-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: opacity 0.2s;
+    z-index: 50;
+  }
+  .admin-btn:hover { opacity: 1; }
+  .admin-badge {
+    background: var(--gold);
+    color: #0a0e1a;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-left: 10px;
+  }
 
   /* Stats row */
   .stats-row {
@@ -553,6 +579,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<button class="admin-btn" id="admin-toggle-btn" onclick="toggleAdmin()">⚙ admin</button>
 
 <script>
 // ─── CONFIG ──────────────────────────────────────────────
@@ -878,6 +905,29 @@ async function submitScore(username, score, rounds_won) {
   }
 }
 
+// ─── ADMIN ───────────────────────────────────────────────
+const ADMIN_PASS = 'hellomoto';
+let isAdmin = false;
+
+function toggleAdmin() {
+  if (isAdmin) {
+    isAdmin = false;
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+    document.getElementById('admin-toggle-btn').textContent = '⚙ admin';
+    showToast('Admin mode off');
+  } else {
+    const pass = prompt('Admin password:');
+    if (pass === ADMIN_PASS) {
+      isAdmin = true;
+      document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+      document.getElementById('admin-toggle-btn').textContent = '⚙ admin ✓';
+      showToast('Admin mode on');
+    } else {
+      showToast('Wrong password');
+    }
+  }
+}
+
 async function removeScore(id) {
   if (!confirm('Remove this entry from the leaderboard?')) return;
   try {
@@ -922,7 +972,7 @@ async function loadLeaderboard() {
           <td class="lb-score">${row.score}</td>
           <td class="lb-rounds">${correct}/5</td>
           <td class="lb-date">${date}</td>
-          <td><button class="lb-delete" onclick="removeScore(${row.id})">✕ Remove</button></td>
+          <td><button class="lb-delete admin-only" onclick="removeScore(${row.id})" style="display:none">✕ Remove</button></td>
         </tr>`;
       }).join('');
     }
