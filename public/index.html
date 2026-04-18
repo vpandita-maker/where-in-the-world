@@ -4,650 +4,902 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Where in the World?</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Cormorant+Garamond:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #0a0e1a;
-    --surface: #111827;
-    --surface2: #1a2235;
-    --border: #1e2d45;
-    --gold: #f0c040;
-    --gold2: #e6a817;
-    --teal: #38bdf8;
-    --green: #4ade80;
-    --red: #f87171;
-    --text: #e8eaf0;
-    --muted: #6b7a99;
-    --radius: 14px;
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0b0f1a;
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --gold: #f0c040;
+  --gold2: #e6a817;
+  --teal: #38bdf8;
+  --green: #4ade80;
+  --red: #f87171;
+  --text: #f0f2f8;
+  --muted: #8fa3c8;
+  --card-bg: rgba(15,20,35,0.85);
+  --radius: 18px;
+  --radius-sm: 10px;
+}
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+body {
+  font-family: 'Cormorant Garamond', serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  /* Background star effect */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      radial-gradient(1px 1px at 20% 30%, rgba(240,192,64,0.3) 0%, transparent 100%),
-      radial-gradient(1px 1px at 80% 10%, rgba(56,189,248,0.2) 0%, transparent 100%),
-      radial-gradient(1px 1px at 50% 70%, rgba(240,192,64,0.15) 0%, transparent 100%),
-      radial-gradient(600px circle at 0% 0%, rgba(56,189,248,0.04) 0%, transparent 60%),
-      radial-gradient(600px circle at 100% 100%, rgba(240,192,64,0.05) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
-  }
+/* Animated world map background */
+.world-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 40%, rgba(56,189,248,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 60%, rgba(240,192,64,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, rgba(11,15,26,0.95) 0%, #0b0f1a 100%);
+  overflow: hidden;
+}
 
-  .wrap { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 24px 20px 80px; }
+.world-bg img {
+  pointer-events: none;
+}
 
-  /* Header */
-  header {
-    text-align: center;
-    padding: 48px 0 36px;
-    position: relative;
-  }
-  header .globe { font-size: 52px; display: block; margin-bottom: 12px; animation: spin 12s linear infinite; }
-  @keyframes spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-  header h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(2rem, 6vw, 3.4rem);
-    font-weight: 900;
-    letter-spacing: -1px;
-    line-height: 1.1;
-    background: linear-gradient(135deg, var(--gold) 0%, var(--teal) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  header p {
-    color: var(--muted);
-    font-size: 0.95rem;
-    margin-top: 10px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.05em;
-  }
+@keyframes drift {
+  from { transform: scale(1.05) translateX(-2%) translateY(-1%); }
+  to { transform: scale(1.12) translateX(2%) translateY(1%); }
+}
 
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 4px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 4px;
-    margin-bottom: 28px;
-  }
-  .tab-btn {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.82rem;
-    letter-spacing: 0.05em;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-  }
-  .tab-btn.active {
-    background: var(--gold);
-    color: #0a0e1a;
-    font-weight: 500;
-  }
+/* Grid lines overlay */
+.world-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridmove 20s linear infinite;
+}
+@keyframes gridmove {
+  from { transform: translateY(0); }
+  to { transform: translateY(60px); }
+}
 
-  /* Panels */
-  .panel { display: none; }
-  .panel.active { display: block; animation: fadeIn 0.3s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
 
-  /* Card */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px;
-    margin-bottom: 20px;
-  }
+/* Header */
+header {
+  text-align: center;
+  padding: 48px 0 52px;
+}
 
-  /* Username entry */
-  .username-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 24px;
-  }
-  .username-row input {
-    flex: 1;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 16px;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .username-row input:focus { border-color: var(--gold); }
-  .username-row input::placeholder { color: var(--muted); }
+.globe-ring {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(240,192,64,0.08);
+  border: 1px solid rgba(240,192,64,0.2);
+  font-size: 36px;
+  margin-bottom: 20px;
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
 
-  /* Buttons */
-  .btn {
-    padding: 12px 22px;
-    border: none;
-    border-radius: 10px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .btn-gold { background: var(--gold); color: #0a0e1a; }
-  .btn-gold:hover { background: var(--gold2); transform: translateY(-1px); }
-  .btn-ghost {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-  }
-  .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+header h1 {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+  font-weight: 900;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: -2px;
+  line-height: 1.0;
+  background: linear-gradient(135deg, #f0c040 0%, #ffffff 45%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+  text-shadow: none;
+}
 
-  /* Score bar */
-  .score-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 20px;
-    margin-bottom: 24px;
-    font-family: 'DM Mono', monospace;
-  }
-  .score-val { font-size: 1.6rem; font-weight: 500; color: var(--gold); }
-  .score-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-  .round-pill {
-    background: var(--border);
-    border-radius: 999px;
-    padding: 4px 14px;
-    font-size: 0.78rem;
-    color: var(--teal);
-  }
+.tagline {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  color: rgba(180,195,230,0.7);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
 
-  /* Clues section */
-  .clues-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .clues-header h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.1rem;
-    color: var(--teal);
-  }
-  .clue-cost { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--muted); }
+/* Bento grid layout */
+.bento {
+  display: grid;
+  grid-template-columns: 1fr 1fr 380px;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  margin-bottom: 24px;
+}
 
-  .clues-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; min-height: 60px; }
-  .clue-item {
-    background: var(--surface2);
-    border-left: 3px solid var(--gold);
-    border-radius: 0 8px 8px 0;
-    padding: 12px 16px;
-    font-size: 0.95rem;
-    animation: slideIn 0.4s ease;
-    line-height: 1.5;
-  }
-  @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
-  .clue-num {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--gold);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 4px;
-  }
+@media (max-width: 1000px) {
+  .bento { grid-template-columns: 1fr 1fr; }
+  .bento-leaderboard { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .bento { grid-template-columns: 1fr; }
+}
 
-  .clue-loading {
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 0;
-  }
-  .dot-pulse { display: flex; gap: 4px; }
-  .dot-pulse span {
-    width: 6px; height: 6px;
-    background: var(--gold);
-    border-radius: 50%;
-    animation: pulse 1s ease-in-out infinite;
-  }
-  .dot-pulse span:nth-child(2) { animation-delay: 0.2s; }
-  .dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes pulse { 0%,100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1); } }
+/* Bento card base */
+.bento-card {
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.2s;
+  cursor: pointer;
+}
+.bento-card:hover {
+  border-color: rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+}
 
-  /* Guess section */
-  .guess-row { display: flex; gap: 10px; margin-bottom: 14px; }
-  .guess-row input {
-    flex: 1;
-    background: var(--surface2);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .guess-row input:focus { border-color: var(--gold); }
-  .guess-row input::placeholder { color: var(--muted); }
+/* Game cards */
+.game-card {
+  padding: 32px;
+  position: relative;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
 
-  .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.game-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.game-card.witw::before { background: linear-gradient(90deg, var(--gold), var(--teal)); }
+.game-card.capital::before { background: linear-gradient(90deg, var(--teal), var(--green)); }
 
-  /* Feedback */
-  .feedback {
-    border-radius: 10px;
-    padding: 14px 18px;
-    margin-top: 16px;
-    font-weight: 500;
-    font-size: 0.95rem;
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
-  .feedback.correct { background: rgba(74,222,128,0.12); border: 1px solid var(--green); color: var(--green); display: block; }
-  .feedback.wrong { background: rgba(248,113,113,0.1); border: 1px solid var(--red); color: var(--red); display: block; }
-  .feedback.info { background: rgba(56,189,248,0.08); border: 1px solid var(--teal); color: var(--teal); display: block; }
+.game-card.active-game {
+  cursor: default;
+  border-color: rgba(240,192,64,0.3);
+}
 
-  /* Game over */
-  #game-over {
-    text-align: center;
-    padding: 40px 20px;
-    display: none;
-  }
-  #game-over h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    color: var(--gold);
-    margin-bottom: 10px;
-  }
-  #game-over .final-score { font-family: 'DM Mono', monospace; font-size: 3rem; color: var(--text); margin: 20px 0; }
-  #game-over p { color: var(--muted); margin-bottom: 24px; }
-  #game-over .btn-row { display: flex; gap: 12px; justify-content: center; }
+.game-icon {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+  display: block;
+}
 
-  /* Leaderboard */
-  .lb-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-  .lb-header h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; }
-  .lb-refresh { font-size: 1.2rem; cursor: pointer; transition: transform 0.3s; }
-  .lb-refresh:hover { transform: rotate(180deg); }
+.game-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #ffffff;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
 
-  .lb-table { width: 100%; border-collapse: collapse; }
-  .lb-table th {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    padding: 8px 14px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-  }
-  .lb-table td {
-    padding: 14px;
-    border-bottom: 1px solid rgba(30,45,69,0.5);
-    font-size: 0.95rem;
-  }
-  .lb-table tr:hover td { background: rgba(240,192,64,0.04); }
-  .rank-badge {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.85rem;
-    font-weight: 500;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .rank-1 { background: var(--gold); color: #0a0e1a; }
-  .rank-2 { background: #94a3b8; color: #0a0e1a; }
-  .rank-3 { background: #b45309; color: white; }
-  .rank-other { color: var(--muted); }
-  .lb-name { font-weight: 500; }
-  .lb-score { font-family: 'DM Mono', monospace; color: var(--gold); font-weight: 500; }
-  .lb-rounds { font-family: 'DM Mono', monospace; color: var(--teal); font-size: 0.85rem; }
-  .lb-date { color: var(--muted); font-size: 0.8rem; font-family: 'DM Mono', monospace; }
-  .lb-delete {
-    background: transparent;
-    border: 1px solid rgba(248,113,113,0.3);
-    color: var(--red);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    font-family: 'DM Mono', monospace;
-    transition: all 0.2s;
-  }
-  .lb-delete:hover { background: rgba(248,113,113,0.15); border-color: var(--red); }
-  .lb-empty { text-align: center; color: var(--muted); padding: 40px; font-family: 'DM Mono', monospace; font-size: 0.85rem; }
-  .admin-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    padding: 6px 12px;
-    border-radius: 999px;
-    cursor: pointer;
-    opacity: 0.3;
-    transition: opacity 0.2s;
-    z-index: 50;
-  }
-  .admin-btn:hover { opacity: 1; }
-  .admin-badge {
-    background: var(--gold);
-    color: #0a0e1a;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    padding: 3px 10px;
-    border-radius: 999px;
-    margin-left: 10px;
-  }
+.game-desc {
+  font-size: 0.95rem;
+  color: rgba(220,228,248,0.85);
+  line-height: 1.7;
+  margin-bottom: 20px;
+  flex: 1;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem;
+}
 
-  /* Stats row */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .stat-box {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
-  }
-  .stat-box .val { font-family: 'DM Mono', monospace; font-size: 1.4rem; color: var(--gold); }
-  .stat-box .lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+.game-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(240,192,64,0.1);
+  border: 1px solid rgba(240,192,64,0.2);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.game-badge.teal {
+  background: rgba(56,189,248,0.1);
+  border-color: rgba(56,189,248,0.2);
+  color: var(--teal);
+}
 
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 12px 24px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.85rem;
-    transition: transform 0.3s ease;
-    z-index: 100;
-    white-space: nowrap;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
+.play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 16px;
+  width: 100%;
+  justify-content: center;
+}
+.play-btn.gold { background: var(--gold); color: #0b0f1a; }
+.play-btn.gold:hover { background: var(--gold2); }
+.play-btn.teal-btn { background: rgba(56,189,248,0.15); color: var(--teal); border: 1px solid rgba(56,189,248,0.3); }
+.play-btn.teal-btn:hover { background: rgba(56,189,248,0.25); }
 
-  /* Timer */
-  .timer-bar {
-    height: 6px;
-    background: var(--border);
-    border-radius: 999px;
-    margin-bottom: 20px;
-    overflow: hidden;
-  }
-  .timer-fill {
-    height: 100%;
-    background: var(--gold);
-    border-radius: 999px;
-    transition: width 1s linear, background 0.3s;
-  }
-  .timer-fill.danger { background: var(--red); }
-  .timer-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.85rem;
-    color: var(--muted);
-    text-align: right;
-    margin-bottom: 6px;
-  }
+/* Leaderboard card */
+.bento-leaderboard {
+  grid-row: 1 / 3;
+  grid-column: 3;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+}
 
-  /* Handoff screen */
-  #handoff-screen {
-    text-align: center;
-    padding: 60px 20px;
-    display: none;
-  }
-  #handoff-screen h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    color: var(--teal);
-    margin-bottom: 12px;
-  }
-  #handoff-screen .final-score { font-family: 'DM Mono', monospace; font-size: 3rem; color: var(--gold); margin: 20px 0; }
-  #handoff-screen p { color: var(--muted); margin-bottom: 28px; }
+@media (max-width: 1000px) {
+  .bento-leaderboard { grid-row: auto; grid-column: auto; }
+}
 
-  @media (max-width: 540px) {
-    .stats-row { grid-template-columns: 1fr 1fr; }
-    .action-row { flex-direction: column; }
-    .username-row { flex-direction: column; }
-  }
+.lb-title {
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lb-refresh {
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--muted);
+  transition: transform 0.3s, color 0.2s;
+  background: none;
+  border: none;
+}
+.lb-refresh:hover { transform: rotate(180deg); color: var(--text); }
+
+/* Top 3 podium */
+.podium {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.podium-slot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.podium-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  font-family: 'DM Mono', monospace;
+}
+
+.podium-slot.first .podium-avatar { background: rgba(240,192,64,0.2); border: 2px solid var(--gold); color: var(--gold); width: 52px; height: 52px; }
+.podium-slot.second .podium-avatar { background: rgba(148,163,184,0.15); border: 2px solid #94a3b8; color: #94a3b8; }
+.podium-slot.third .podium-avatar { background: rgba(180,83,9,0.15); border: 2px solid #b45309; color: #b45309; }
+
+.podium-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
+}
+
+.podium-score {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--gold);
+}
+
+.podium-block {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+}
+.podium-slot.first .podium-block { height: 48px; background: rgba(240,192,64,0.08); border-color: rgba(240,192,64,0.2); }
+.podium-slot.second .podium-block { height: 36px; }
+.podium-slot.third .podium-block { height: 28px; }
+
+.podium-rank {
+  font-size: 0.65rem;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+}
+
+/* Rest of leaderboard */
+.lb-rest {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
+}
+.lb-row:hover { background: rgba(255,255,255,0.04); }
+
+.lb-rank-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  width: 20px;
+  text-align: center;
+}
+.lb-name { font-size: 0.88rem; flex: 1; }
+.lb-pts { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--gold); font-weight: 500; }
+
+.lb-empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 0.85rem; }
+
+/* Stats row */
+.stats-bento {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 640px) { .stats-bento { grid-template-columns: 1fr 1fr; } }
+
+.stat-tile {
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  text-align: center;
+  backdrop-filter: blur(20px);
+}
+.stat-tile .val { font-family: 'DM Mono', monospace; font-size: 1.3rem; color: var(--gold); font-weight: 500; }
+.stat-tile .lbl { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+
+/* Active game panel */
+.game-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  padding: 32px;
+  margin-bottom: 16px;
+}
+
+/* Timer */
+.timer-wrap { margin-bottom: 20px; }
+.timer-label { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--muted); text-align: right; margin-bottom: 6px; }
+.timer-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; }
+.timer-fill { height: 100%; background: var(--gold); border-radius: 999px; transition: width 1s linear, background 0.3s; }
+.timer-fill.danger { background: var(--red); }
+
+/* Score bar */
+.score-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 20px;
+  margin-bottom: 24px;
+}
+.score-val { font-size: 1.6rem; font-weight: 500; color: var(--gold); font-family: 'DM Mono', monospace; }
+.score-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.round-pill {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 0.78rem;
+  color: var(--teal);
+  font-family: 'DM Mono', monospace;
+}
+
+/* Clues */
+.clues-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.clues-header h3 { font-size: 0.9rem; color: var(--teal); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; }
+.clue-cost { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+
+.clue-item {
+  background: rgba(56,189,248,0.04);
+  border-left: 3px solid var(--teal);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  font-size: 0.92rem;
+  margin-bottom: 8px;
+  line-height: 1.5;
+  animation: slideIn 0.35s ease;
+}
+@keyframes slideIn { from { opacity:0; transform: translateX(-10px); } to { opacity:1; transform:none; } }
+.clue-num { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--teal); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+
+/* Inputs & buttons */
+.input-field {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  color: var(--text);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-field:focus { border-color: var(--gold); }
+.input-field::placeholder { color: var(--muted); }
+
+.btn { padding: 12px 22px; border: none; border-radius: var(--radius-sm); font-family: 'Cormorant Garamond', serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-gold { background: var(--gold); color: #0b0f1a; }
+.btn-gold:hover { background: var(--gold2); transform: translateY(-1px); }
+.btn-ghost { background: transparent; border: 1px solid var(--glass-border); color: var(--muted); }
+.btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.guess-row { display: flex; gap: 10px; margin-bottom: 12px; }
+.action-row { margin-bottom: 16px; }
+
+/* Feedback */
+.feedback { border-radius: var(--radius-sm); padding: 12px 16px; margin-top: 12px; font-weight: 500; font-size: 0.9rem; display: none; animation: fadeIn 0.3s ease; }
+.feedback.correct { background: rgba(74,222,128,0.1); border: 1px solid var(--green); color: var(--green); display: block; }
+.feedback.wrong { background: rgba(248,113,113,0.1); border: 1px solid var(--red); color: var(--red); display: block; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform:none; } }
+
+/* Game over */
+.game-over-panel { text-align: center; padding: 48px 24px; }
+.game-over-panel h2 { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--gold); margin-bottom: 10px; }
+.final-score { font-family: 'DM Mono', monospace; font-size: 3rem; color: var(--text); margin: 20px 0; }
+.btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* Username card */
+.name-card { max-width: 500px; margin: 0 auto; }
+.name-card h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 8px; }
+.name-card p { color: var(--muted); font-size: 0.88rem; margin-bottom: 24px; }
+.name-row { display: flex; gap: 10px; }
+
+/* Toast */
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: rgba(15,20,35,0.95); border: 1px solid var(--glass-border); border-radius: 999px; padding: 12px 24px; font-family: 'DM Mono', monospace; font-size: 0.82rem; transition: transform 0.3s ease; z-index: 100; white-space: nowrap; backdrop-filter: blur(20px); }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* API Pills */
+.api-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(74,222,128,0.08);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--green);
+  position: relative;
+}
+.api-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.4; transform:scale(0.7); }
+}
+.api-pill.offline {
+  background: rgba(248,113,113,0.08);
+  border-color: rgba(248,113,113,0.2);
+  color: var(--red);
+}
+.api-pill.offline::before { background: var(--red); animation: none; }
+
+/* How it works */
+.how-step {
+  flex: 1;
+  text-align: center;
+  padding: 16px 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+.how-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--gold);
+  margin-bottom: 8px;
+  letter-spacing: 0.1em;
+}
+.how-icon { font-size: 1.4rem; margin-bottom: 8px; }
+.how-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.how-desc {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.how-arrow {
+  font-size: 1.2rem;
+  color: var(--muted);
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Activity feed */
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  animation: slideIn 0.3s ease;
+}
+.activity-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(240,192,64,0.15);
+  border: 1px solid rgba(240,192,64,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+.activity-text { flex: 1; font-size: 0.8rem; line-height: 1.3; }
+.activity-name { font-weight: 600; color: var(--text); }
+.activity-score { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--gold); }
+.activity-time { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); flex-shrink: 0; }
+
+@media (max-width: 800px) {
+  .how-arrow { display: none; }
+}
+
+/* Admin */
+.admin-btn { position: fixed; bottom: 20px; right: 20px; background: transparent; border: 1px solid var(--glass-border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.7rem; padding: 6px 12px; border-radius: 999px; cursor: pointer; opacity: 0.3; transition: opacity 0.2s; z-index: 50; }
+.admin-btn:hover { opacity: 1; }
+
+/* Sections */
+.section-label { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; }
+
+@media (max-width: 540px) { .name-row { flex-direction: column; } .btn-row { flex-direction: column; } }
 </style>
 </head>
 <body>
+
+<div class="world-bg">
+  <img
+    src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/World_map_-_low_resolution.svg/2560px-World_map_-_low_resolution.svg.png"
+    alt=""
+    style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.07;animation:drift 40s ease-in-out infinite alternate;filter:invert(1) sepia(1) saturate(0.5) hue-rotate(180deg);"
+  />
+</div>
+
 <div class="wrap">
   <header>
-    <span class="globe">🌍</span>
+    <div class="globe-ring">🌍</div>
     <h1>Where in the World?</h1>
-    <p>// geography clue game — decode the country</p>
+    <p class="tagline">// geography challenge — test your world knowledge</p>
   </header>
 
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('game')">🌍 Where in the World</button>
-    <button class="tab-btn" onclick="switchTab('capital')">🏛 Capital Quiz</button>
-    <button class="tab-btn" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
-  </div>
-
-  <!-- GAME PANEL -->
-  <div class="panel active" id="panel-game">
-
-    <!-- Username -->
-    <div class="card" id="username-card">
-      <div style="margin-bottom:16px">
-        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:6px">Enter your name to play</div>
-        <div style="color:var(--muted);font-size:0.85rem">Your score will be saved to the global leaderboard.</div>
+  <!-- HOME VIEW -->
+  <div id="home-view">
+    <div class="bento">
+      <!-- Game 1 -->
+      <div class="bento-card game-card witw" onclick="showGame('witw')">
+        <div>
+          <span class="game-icon">🔍</span>
+          <div class="game-title">Where in the World?</div>
+          <div class="game-desc">Decode a mystery country from geographic clues. Each clue costs points — guess faster to score higher.</div>
+          <div class="game-badge">5 rounds · 30s each</div>
+        </div>
+        <button class="play-btn gold" onclick="event.stopPropagation();showGame('witw')">Play Now →</button>
       </div>
-      <div class="username-row">
-        <input type="text" id="username-input" placeholder="your name..." maxlength="20"/>
-        <button class="btn btn-gold" onclick="startGame()">Start →</button>
+
+      <!-- Game 2 -->
+      <div class="bento-card game-card capital" onclick="showGame('capital')">
+        <div>
+          <span class="game-icon">🏛</span>
+          <div class="game-title">Capital City Quiz</div>
+          <div class="game-desc">Name the capital city of each country. Race against the clock — faster answers earn more points.</div>
+          <div class="game-badge teal">5 rounds · 30s each</div>
+        </div>
+        <button class="play-btn teal-btn" onclick="event.stopPropagation();showGame('capital')">Play Now →</button>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="bento-card bento-leaderboard">
+        <div class="lb-title">
+          <span>🏆 Leaderboard</span>
+          <button class="lb-refresh" onclick="loadLeaderboard()" title="Refresh">↻</button>
+        </div>
+
+        <!-- Podium top 3 -->
+        <div class="podium" id="podium">
+          <div class="podium-slot second">
+            <div class="podium-avatar" id="pod2-avatar">—</div>
+            <div class="podium-name" id="pod2-name">—</div>
+            <div class="podium-score" id="pod2-score">—</div>
+            <div class="podium-rank">2nd</div>
+            <div class="podium-block"></div>
+          </div>
+          <div class="podium-slot first">
+            <div class="podium-avatar" id="pod1-avatar">—</div>
+            <div class="podium-name" id="pod1-name">—</div>
+            <div class="podium-score" id="pod1-score">—</div>
+            <div class="podium-rank">1st</div>
+            <div class="podium-block"></div>
+          </div>
+          <div class="podium-slot third">
+            <div class="podium-avatar" id="pod3-avatar">—</div>
+            <div class="podium-name" id="pod3-name">—</div>
+            <div class="podium-score" id="pod3-score">—</div>
+            <div class="podium-rank">3rd</div>
+            <div class="podium-block"></div>
+          </div>
+        </div>
+
+        <div class="lb-rest" id="lb-rest">
+          <div class="lb-empty">Loading...</div>
+        </div>
+
+        <!-- Stats -->
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--glass-border)">
+          <div class="stats-bento" style="grid-template-columns:1fr 1fr;gap:8px">
+            <div class="stat-tile"><div class="val" id="stat-players">—</div><div class="lbl">Players</div></div>
+            <div class="stat-tile"><div class="val" id="stat-high">—</div><div class="lbl">High Score</div></div>
+            <div class="stat-tile"><div class="val" id="stat-avg">—</div><div class="lbl">Mean</div></div>
+            <div class="stat-tile"><div class="val" id="stat-median">—</div><div class="lbl">Median</div></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Active game -->
-    <div id="active-game" style="display:none">
-      <div class="timer-label"><span id="timer-display">30</span>s remaining</div>
-      <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
-      <div class="score-bar">
-        <div>
-          <div class="score-label">Score</div>
-          <div class="score-val" id="score-display">0</div>
-        </div>
-        <div class="round-pill" id="round-display">Round 1 / 5</div>
-        <div style="text-align:right">
-          <div class="score-label">Correct</div>
-          <div style="font-family:'DM Mono',monospace;font-size:1.3rem;color:var(--green)" id="correct-display">0</div>
+    <!-- API Status Bar -->
+    <div style="margin-bottom:16px">
+      <div class="section-label" style="margin-bottom:10px">⚡ API Status</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div class="api-pill" id="api-add">POST /add</div>
+        <div class="api-pill" id="api-remove">DELETE /remove</div>
+        <div class="api-pill" id="api-leaderboard">GET /leaderboard</div>
+        <div class="api-pill" id="api-info">GET /info</div>
+        <div class="api-pill" id="api-performance">GET /performance</div>
+        <div class="api-pill" id="api-history">GET /history</div>
+      </div>
+    </div>
+
+    <!-- How it works + Activity Feed -->
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;margin-bottom:16px">
+
+      <!-- How it works -->
+      <div class="bento-card" style="padding:28px">
+        <div class="section-label" style="margin-bottom:18px">🔧 How It Works</div>
+        <div style="display:flex;align-items:center;gap:0;position:relative">
+          <div class="how-step">
+            <div class="how-num">01</div>
+            <div class="how-icon">🎮</div>
+            <div class="how-title">Player Scores</div>
+            <div class="how-desc">User plays a game and earns points</div>
+          </div>
+          <div class="how-arrow">→</div>
+          <div class="how-step">
+            <div class="how-num">02</div>
+            <div class="how-icon">⚙️</div>
+            <div class="how-title">REST API</div>
+            <div class="how-desc">POST /add sends score to Express server</div>
+          </div>
+          <div class="how-arrow">→</div>
+          <div class="how-step">
+            <div class="how-num">03</div>
+            <div class="how-icon">🗄️</div>
+            <div class="how-title">PostgreSQL</div>
+            <div class="how-desc">Score stored in persistent cloud database</div>
+          </div>
+          <div class="how-arrow">→</div>
+          <div class="how-step">
+            <div class="how-num">04</div>
+            <div class="how-icon">📊</div>
+            <div class="how-title">Live Board</div>
+            <div class="how-desc">GET /leaderboard returns ranked results</div>
+          </div>
         </div>
       </div>
 
-      <div class="card">
+      <!-- Activity Feed -->
+      <div class="bento-card" style="padding:24px">
+        <div class="section-label" style="margin-bottom:14px">🔴 Live Activity</div>
+        <div id="activity-feed" style="display:flex;flex-direction:column;gap:8px">
+          <div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- WITW GAME VIEW -->
+  <div id="witw-view" style="display:none;max-width:700px;margin:0 auto">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+      <button class="btn btn-ghost" onclick="showHome()" style="padding:8px 16px;font-size:0.82rem">← Back</button>
+      <span style="font-family:'Playfair Display',serif;font-size:1.2rem">🔍 Where in the World?</span>
+    </div>
+
+    <div class="game-panel" id="witw-username-card">
+      <div class="name-card">
+        <h2 style='font-family:Cinzel,serif;letter-spacing:0.05em;font-size:1.3rem'>Ready to Explore?</h2>
+        <p style='color:rgba(200,215,245,0.85);font-size:1.05rem;font-family:Cormorant Garamond,serif'>Decode mystery countries from clues. Fewer clues = more points.</p>
+        <div class="name-row">
+          <input type="text" class="input-field" id="username-input" placeholder="your name..." maxlength="20"/>
+          <button class="btn btn-gold" onclick="startGame()">Start →</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="active-game" style="display:none">
+      <div class="game-panel">
+        <div class="timer-wrap">
+          <div class="timer-label"><span id="timer-display">30</span>s remaining</div>
+          <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+        </div>
+        <div class="score-bar">
+          <div><div class="score-label">Score</div><div class="score-val" id="score-display">0</div></div>
+          <div class="round-pill" id="round-display">Round 1 / 5</div>
+          <div style="text-align:right"><div class="score-label">Correct</div><div style="font-family:'DM Mono',monospace;font-size:1.3rem;color:var(--green)" id="correct-display">0</div></div>
+        </div>
         <div class="clues-header">
-          <h3>🔍 Clues Revealed</h3>
+          <h3>Clues Revealed</h3>
           <span class="clue-cost" id="clue-cost-label">Next clue costs 10 pts</span>
         </div>
-        <div class="clues-list" id="clues-list"></div>
-
-        <div class="action-row" style="margin-bottom:16px">
-          <button class="btn btn-ghost" id="next-clue-btn" onclick="revealNextClue()">+ Reveal Clue (−10 pts)</button>
+        <div id="clues-list" style="margin-bottom:16px"></div>
+        <div class="action-row">
+          <button class="btn btn-ghost" id="next-clue-btn" onclick="revealNextClue()" style="width:100%">+ Reveal Clue (−10 pts)</button>
         </div>
-
         <div class="guess-row">
-          <input type="text" id="guess-input" placeholder="Type country name..." onkeydown="if(event.key==='Enter') submitGuess()"/>
+          <input type="text" class="input-field" id="guess-input" placeholder="Type country name..." onkeydown="if(event.key==='Enter') submitGuess()"/>
           <button class="btn btn-gold" onclick="submitGuess()">Guess →</button>
         </div>
-
         <div class="feedback" id="feedback"></div>
       </div>
     </div>
 
-    <!-- Game over -->
-    <div id="game-over">
-      <div style="font-size:3rem;margin-bottom:12px">🌐</div>
-      <h2>Game Over!</h2>
-      <p id="go-name">Well played, Explorer.</p>
-      <div class="final-score" id="final-score-display">0 pts</div>
-      <p id="go-summary" style="margin-bottom:28px"></p>
-      <div class="btn-row">
-        <button class="btn btn-gold" onclick="restartGame()">Play Again</button>
-        <button class="btn btn-ghost" onclick="switchTab('leaderboard')">View Leaderboard</button>
+    <div id="game-over" style="display:none">
+      <div class="game-panel game-over-panel">
+        <div style="font-size:3rem;margin-bottom:12px">🌐</div>
+        <h2>Game Over!</h2>
+        <p id="go-name" style="color:var(--muted);margin-bottom:8px"></p>
+        <div class="final-score" id="final-score-display">0 pts</div>
+        <p id="go-summary" style="color:var(--muted);margin-bottom:28px"></p>
+        <div class="btn-row">
+          <button class="btn btn-gold" onclick="restartGame()">Play Again</button>
+          <button class="btn btn-ghost" onclick="showHome()">Back to Home</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- CAPITAL QUIZ PANEL -->
-  <div class="panel" id="panel-capital">
+  <!-- CAPITAL GAME VIEW -->
+  <div id="capital-view" style="display:none;max-width:700px;margin:0 auto">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+      <button class="btn btn-ghost" onclick="showHome()" style="padding:8px 16px;font-size:0.82rem">← Back</button>
+      <span style="font-family:'Playfair Display',serif;font-size:1.2rem">🏛 Capital City Quiz</span>
+    </div>
 
-    <div class="card" id="cap-username-card">
-      <div style="margin-bottom:16px">
-        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:6px">🏛 Capital City Quiz</div>
-        <div style="color:var(--muted);font-size:0.85rem">Name the capital city of each country. 5 rounds, 30 seconds each.</div>
-      </div>
-      <div class="username-row">
-        <input type="text" id="cap-username-input" placeholder="your name..." maxlength="20"/>
-        <button class="btn btn-gold" onclick="startCapitalGame()">Start →</button>
+    <div class="game-panel" id="cap-username-card">
+      <div class="name-card">
+        <h2 style='font-family:Cinzel,serif;letter-spacing:0.05em;font-size:1.3rem'>Know Your Capitals?</h2>
+        <p style='color:rgba(200,215,245,0.85);font-size:1.05rem;font-family:Cormorant Garamond,serif'>Name the capital of each country. Faster answers score more points.</p>
+        <div class="name-row">
+          <input type="text" class="input-field" id="cap-username-input" placeholder="your name..." maxlength="20"/>
+          <button class="btn btn-gold" onclick="startCapitalGame()">Start →</button>
+        </div>
       </div>
     </div>
 
     <div id="cap-active-game" style="display:none">
-      <div class="timer-label"><span id="cap-timer-display">30</span>s remaining</div>
-      <div class="timer-bar"><div class="timer-fill" id="cap-timer-fill" style="width:100%"></div></div>
-      <div class="score-bar">
-        <div>
-          <div class="score-label">Score</div>
-          <div class="score-val" id="cap-score-display">0</div>
+      <div class="game-panel">
+        <div class="timer-wrap">
+          <div class="timer-label"><span id="cap-timer-display">30</span>s remaining</div>
+          <div class="timer-bar"><div class="timer-fill" id="cap-timer-fill" style="width:100%"></div></div>
         </div>
-        <div class="round-pill" id="cap-round-display">Round 1 / 5</div>
-        <div style="text-align:right">
-          <div class="score-label">Correct</div>
-          <div style="font-family:'DM Mono',monospace;font-size:1.3rem;color:var(--green)" id="cap-correct-display">0</div>
+        <div class="score-bar">
+          <div><div class="score-label">Score</div><div class="score-val" id="cap-score-display">0</div></div>
+          <div class="round-pill" id="cap-round-display">Round 1 / 5</div>
+          <div style="text-align:right"><div class="score-label">Correct</div><div style="font-family:'DM Mono',monospace;font-size:1.3rem;color:var(--green)" id="cap-correct-display">0</div></div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="clues-header">
-          <h3 id="cap-question">What is the capital of <span id="cap-country" style="color:var(--gold)">...</span>?</h3>
+        <div class="game-panel" style="padding:24px;margin-bottom:0;background:rgba(56,189,248,0.04);border-color:rgba(56,189,248,0.15)">
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.08em">What is the capital of</div>
+          <div style="font-family:'Playfair Display',serif;font-size:2rem;color:var(--text);margin-bottom:0" id="cap-country">...</div>
         </div>
-        <div class="guess-row" style="margin-top:20px">
-          <input type="text" id="cap-guess-input" placeholder="Type capital city..." onkeydown="if(event.key==='Enter') submitCapitalGuess()"/>
+        <div style="height:16px"></div>
+        <div class="guess-row">
+          <input type="text" class="input-field" id="cap-guess-input" placeholder="Type capital city..." onkeydown="if(event.key==='Enter') submitCapitalGuess()"/>
           <button class="btn btn-gold" onclick="submitCapitalGuess()">Guess →</button>
         </div>
         <div class="feedback" id="cap-feedback"></div>
       </div>
     </div>
 
-    <div id="cap-game-over" style="display:none;text-align:center;padding:40px 20px">
-      <div style="font-size:3rem;margin-bottom:12px">🏛</div>
-      <h2 style="font-family:'Playfair Display',serif;font-size:2rem;color:var(--gold)">Game Over!</h2>
-      <p id="cap-go-name">Well played!</p>
-      <div class="final-score" id="cap-final-score">0 pts</div>
-      <p id="cap-go-summary" style="margin-bottom:28px"></p>
-      <div class="btn-row">
-        <button class="btn btn-gold" onclick="restartCapitalGame()">Play Again</button>
-        <button class="btn btn-ghost" onclick="switchTab('leaderboard')">View Leaderboard</button>
+    <div id="cap-game-over" style="display:none">
+      <div class="game-panel game-over-panel">
+        <div style="font-size:3rem;margin-bottom:12px">🏛</div>
+        <h2>Game Over!</h2>
+        <p id="cap-go-name" style="color:var(--muted);margin-bottom:8px"></p>
+        <div class="final-score" id="cap-final-score">0 pts</div>
+        <p id="cap-go-summary" style="color:var(--muted);margin-bottom:28px"></p>
+        <div class="btn-row">
+          <button class="btn btn-gold" onclick="restartCapitalGame()">Play Again</button>
+          <button class="btn btn-ghost" onclick="showHome()">Back to Home</button>
+        </div>
       </div>
     </div>
-  </div>
-
-  <!-- LEADERBOARD PANEL -->
-  <div class="panel" id="panel-leaderboard">
-    <div class="card">
-      <div class="lb-header">
-        <h2>🏆 Leaderboard</h2>
-        <span class="lb-refresh" onclick="loadLeaderboard()" title="Refresh">↻</span>
-      </div>
-      <table class="lb-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Player</th>
-            <th>Score</th>
-            <th>Correct</th>
-            <th>Date</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="lb-body">
-          <tr><td colspan="5" class="lb-empty">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card" id="info-card">
-      <div class="lb-header">
-        <h2>📊 Score Statistics</h2>
-      </div>
-      <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
-        <div class="stat-box"><div class="val" id="stat-players">—</div><div class="lbl">Players</div></div>
-        <div class="stat-box"><div class="val" id="stat-high">—</div><div class="lbl">High Score</div></div>
-        <div class="stat-box"><div class="val" id="stat-avg">—</div><div class="lbl">Mean Score</div></div>
-        <div class="stat-box"><div class="val" id="stat-median">—</div><div class="lbl">Median</div></div>
-      </div>
-      <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
-        <div class="stat-box"><div class="val" id="stat-q1">—</div><div class="lbl">Q1 (25th %ile)</div></div>
-        <div class="stat-box"><div class="val" id="stat-q3">—</div><div class="lbl">Q3 (75th %ile)</div></div>
-        <div class="stat-box"><div class="val" id="stat-std">—</div><div class="lbl">Std Deviation</div></div>
-        <div class="stat-box"><div class="val" id="stat-range">—</div><div class="lbl">Score Range</div></div>
-      </div>
-    </div>
-
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
 <button class="admin-btn" id="admin-toggle-btn" onclick="toggleAdmin()">⚙ admin</button>
+<div class="toast" id="toast"></div>
 
 <script>
-// ─── CONFIG ──────────────────────────────────────────────
 const API_BASE = '';
 const TOTAL_ROUNDS = 5;
 const BASE_SCORE = 100;
 const CLUE_PENALTY = 10;
-const ROUND_TIME = 30; // seconds per round
+const ROUND_TIME = 30;
 
-let timerInterval = null;
-let timeLeft = ROUND_TIME;
-
-// ─── HARDCODED CLUES ─────────────────────────────────────
 const COUNTRY_CLUES = {
   "Thailand": [
     "This Southeast Asian country is located in the heart of the Indochina peninsula.",
@@ -756,347 +1008,6 @@ const COUNTRY_CLUES = {
   ]
 };
 
-
-// ─── STATE ───────────────────────────────────────────────
-let state = {
-  username: '',
-  score: 0,
-  round: 0,
-  roundsWon: 0,
-  currentCountry: '',
-  clues: [],
-  clueIndex: 0,
-  answered: false,
-  loading: false,
-  usedCountries: []
-};
-
-// ─── TAB SWITCHING ───────────────────────────────────────
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => {
-    b.classList.toggle('active',
-      (i===0 && tab==='game') ||
-      (i===1 && tab==='capital') ||
-      (i===2 && tab==='leaderboard')
-    );
-  });
-  document.getElementById('panel-game').classList.toggle('active', tab==='game');
-  document.getElementById('panel-capital').classList.toggle('active', tab==='capital');
-  document.getElementById('panel-leaderboard').classList.toggle('active', tab==='leaderboard');
-  if (tab === 'leaderboard') loadLeaderboard();
-}
-
-// ─── GAME FLOW ───────────────────────────────────────────
-function startGame() {
-  const name = document.getElementById('username-input').value.trim();
-  if (!name) { showToast('Enter your name first!'); return; }
-  state.username = name;
-  state.score = 0;
-  state.round = 0;
-  state.roundsWon = 0;
-  state.usedCountries = [];
-
-  document.getElementById('username-card').style.display = 'none';
-  document.getElementById('active-game').style.display = 'block';
-  document.getElementById('game-over').style.display = 'none';
-
-  nextRound();
-}
-
-function pickCountry() {
-  const all = Object.keys(COUNTRY_CLUES);
-  const remaining = all.filter(c => !state.usedCountries.includes(c));
-  const pick = remaining[Math.floor(Math.random() * remaining.length)];
-  state.usedCountries.push(pick);
-  return pick;
-}
-
-function startTimer() {
-  clearTimer();
-  timeLeft = ROUND_TIME;
-  updateTimerUI();
-  timerInterval = setInterval(() => {
-    timeLeft--;
-    updateTimerUI();
-    if (timeLeft <= 0) {
-      clearTimer();
-      if (!state.answered) {
-        state.answered = true;
-        showFeedback(`⏱ Time's up! The answer was ${state.currentCountry}.`, 'wrong');
-        document.getElementById('next-clue-btn').disabled = true;
-        setTimeout(() => nextRound(), 2000);
-      }
-    }
-  }, 1000);
-}
-
-function clearTimer() {
-  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-}
-
-function updateTimerUI() {
-  const pct = (timeLeft / ROUND_TIME) * 100;
-  const fill = document.getElementById('timer-fill');
-  const label = document.getElementById('timer-display');
-  if (fill) { fill.style.width = pct + '%'; fill.className = 'timer-fill' + (timeLeft <= 10 ? ' danger' : ''); }
-  if (label) label.textContent = timeLeft;
-}
-
-function nextRound() {
-  if (state.round >= TOTAL_ROUNDS) { endGame(); return; }
-  state.round++;
-  state.currentCountry = pickCountry();
-  state.clues = [];
-  state.clueIndex = 0;
-  state.answered = false;
-
-  updateUI();
-  document.getElementById('clues-list').innerHTML = '';
-  document.getElementById('guess-input').value = '';
-  hideFeedback();
-  document.getElementById('next-clue-btn').disabled = false;
-  document.getElementById('clue-cost-label').textContent = `Next clue costs ${CLUE_PENALTY} pts`;
-
-  startTimer();
-  revealNextClue(true);
-}
-
-function revealNextClue(free = false) {
-  if (state.answered) return;
-  const clues = COUNTRY_CLUES[state.currentCountry];
-  if (state.clueIndex >= clues.length) return;
-
-  const clueText = clues[state.clueIndex];
-  state.clues.push(clueText);
-  state.clueIndex++;
-
-  const list = document.getElementById('clues-list');
-  const clueEl = document.createElement('div');
-  clueEl.className = 'clue-item';
-  clueEl.innerHTML = `<div class="clue-num">Clue ${state.clueIndex}</div>${clueText}`;
-  list.appendChild(clueEl);
-
-  if (!free && state.clueIndex > 1) {
-    state.score = Math.max(0, state.score - CLUE_PENALTY);
-    updateUI();
-  }
-
-  document.getElementById('clue-cost-label').textContent =
-    state.clueIndex >= clues.length ? 'All clues revealed' : `Next clue costs ${CLUE_PENALTY} pts`;
-  document.getElementById('next-clue-btn').disabled = state.clueIndex >= clues.length;
-}
-
-function submitGuess() {
-  if (state.answered || state.loading) return;
-  const guess = document.getElementById('guess-input').value.trim();
-  if (!guess) return;
-
-  const correct = guess.toLowerCase() === state.currentCountry.toLowerCase();
-  state.answered = true;
-
-  if (correct) {
-    const pointsEarned = Math.max(BASE_SCORE - (state.clueIndex - 1) * CLUE_PENALTY, 10);
-    state.score += pointsEarned;
-    state.roundsWon++;
-    showFeedback(`✓ Correct! +${pointsEarned} points. It was ${state.currentCountry}!`, 'correct');
-  } else {
-    showFeedback(`✗ Wrong! The answer was ${state.currentCountry}. No points this round.`, 'wrong');
-  }
-
-  updateUI();
-  clearTimer();
-  document.getElementById('next-clue-btn').disabled = true;
-  setTimeout(() => nextRound(), 2200);
-}
-
-function endGame() {
-  clearTimer();
-  document.getElementById('active-game').style.display = 'none';
-  document.getElementById('game-over').style.display = 'block';
-  document.getElementById('final-score-display').textContent = `${state.score} pts`;
-  document.getElementById('go-name').textContent = `Well played, ${state.username}!`;
-  document.getElementById('go-summary').textContent =
-    `You got ${state.roundsWon} out of ${TOTAL_ROUNDS} countries correct.`;
-  submitScore(state.username, state.score, state.roundsWon);
-}
-
-function restartGame() {
-  document.getElementById('game-over').style.display = 'none';
-  document.getElementById('active-game').style.display = 'block';
-  state.score = 0;
-  state.round = 0;
-  state.roundsWon = 0;
-  state.usedCountries = [];
-  nextRound();
-}
-
-// ─── UI HELPERS ──────────────────────────────────────────
-function updateUI() {
-  document.getElementById('score-display').textContent = state.score;
-  document.getElementById('round-display').textContent = `Round ${state.round} / ${TOTAL_ROUNDS}`;
-  document.getElementById('correct-display').textContent = state.roundsWon;
-}
-
-function showFeedback(msg, type) {
-  const el = document.getElementById('feedback');
-  el.textContent = msg;
-  el.className = `feedback ${type}`;
-}
-
-function hideFeedback() {
-  document.getElementById('feedback').className = 'feedback';
-}
-
-// ─── LEADERBOARD API ─────────────────────────────────────
-async function submitScore(username, score, rounds_won) {
-  try {
-    const res = await fetch(`${API_BASE}/add`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, score, rounds_won })
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast(`🏆 Rank #${data.data.rank} — score saved!`);
-    }
-  } catch(e) {
-    // Server might not be running during demo — silent fail
-    showToast('Score not saved — run the server to enable leaderboard');
-  }
-}
-
-// ─── ADMIN ───────────────────────────────────────────────
-const ADMIN_PASS = 'hellomoto';
-let isAdmin = false;
-
-function toggleAdmin() {
-  if (isAdmin) {
-    isAdmin = false;
-    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-    document.getElementById('admin-toggle-btn').textContent = '⚙ admin';
-    showToast('Admin mode off');
-  } else {
-    const pass = prompt('Admin password:');
-    if (pass === ADMIN_PASS) {
-      isAdmin = true;
-      document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
-      document.getElementById('admin-toggle-btn').textContent = '⚙ admin ✓';
-      showToast('Admin mode on');
-    } else {
-      showToast('Wrong password');
-    }
-  }
-}
-
-async function removeScore(id) {
-  if (!confirm('Remove this entry from the leaderboard?')) return;
-  try {
-    const res = await fetch(`${API_BASE}/remove`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
-    const data = await res.json();
-    if (data.success) {
-      document.getElementById(`row-${id}`)?.remove();
-      showToast('Entry removed');
-      loadLeaderboard();
-    } else {
-      showToast('Could not remove entry');
-    }
-  } catch(e) {
-    showToast('Error removing entry');
-  }
-}
-
-async function loadLeaderboard() {
-  const tbody = document.getElementById('lb-body');
-  tbody.innerHTML = '<tr><td colspan="5" class="lb-empty">Loading...</td></tr>';
-
-  // Load leaderboard scores
-  try {
-    const res = await fetch(`${API_BASE}/leaderboard`);
-    const data = await res.json();
-    if (!data.success || data.data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="lb-empty">No scores yet — be the first!</td></tr>';
-    } else {
-      tbody.innerHTML = data.data.map((row, i) => {
-        const rank = i + 1;
-        const badgeClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
-        const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
-        const date = new Date(row.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric' });
-        const correct = row.rounds_won !== undefined ? row.rounds_won : '?';
-        return `<tr id="row-${row.id}">
-          <td><div class="rank-badge ${badgeClass}">${medal}</div></td>
-          <td class="lb-name">${escHtml(row.username)}</td>
-          <td class="lb-score">${row.score}</td>
-          <td class="lb-rounds">${correct}/5</td>
-          <td class="lb-date">${date}</td>
-          <td><button class="lb-delete admin-only" onclick="removeScore(${row.id})" style="display:none">✕ Remove</button></td>
-        </tr>`;
-      }).join('');
-    }
-  } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="6" class="lb-empty">⚠ Could not load leaderboard</td></tr>';
-  }
-
-  // Load /info stats
-  try {
-    const sRes = await fetch(`${API_BASE}/info`);
-    const sData = await sRes.json();
-    if (sData.success && sData.data.count > 0) {
-      document.getElementById('stat-players').textContent = sData.data.count;
-      document.getElementById('stat-high').textContent = sData.data.max;
-      document.getElementById('stat-avg').textContent = sData.data.mean;
-      document.getElementById('stat-median').textContent = sData.data.median;
-      document.getElementById('stat-q1').textContent = sData.data.q1;
-      document.getElementById('stat-q3').textContent = sData.data.q3;
-      document.getElementById('stat-std').textContent = sData.data.std_deviation;
-      document.getElementById('stat-range').textContent = sData.data.range;
-    } else {
-      ['stat-players','stat-high','stat-avg','stat-median','stat-q1','stat-q3','stat-std','stat-range']
-        .forEach(id => document.getElementById(id).textContent = '—');
-    }
-  } catch(e) {}
-
-  // Load /performance stats
-  const perfBody = document.getElementById('perf-body');
-  try {
-    const pRes = await fetch(`${API_BASE}/performance`);
-    const pData = await pRes.json();
-    const entries = Object.entries(pData.data);
-    if (entries.length === 0) {
-      perfBody.innerHTML = '<tr><td colspan="5" class="lb-empty">No performance data yet</td></tr>';
-    } else {
-      perfBody.innerHTML = entries.map(([endpoint, stats]) => `
-        <tr>
-          <td style="font-family:'DM Mono',monospace;color:var(--teal)">${escHtml(endpoint)}</td>
-          <td style="font-family:'DM Mono',monospace;color:var(--gold)">${stats.avg_ms}</td>
-          <td style="font-family:'DM Mono',monospace">${stats.min_ms}</td>
-          <td style="font-family:'DM Mono',monospace">${stats.max_ms}</td>
-          <td style="font-family:'DM Mono',monospace;color:var(--muted)">${stats.calls}</td>
-        </tr>`).join('');
-    }
-  } catch(e) {
-    perfBody.innerHTML = '<tr><td colspan="5" class="lb-empty">⚠ Could not load performance data</td></tr>';
-  }
-}
-
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3200);
-}
-
-// Init
-loadLeaderboard();
-
-// ─── CAPITAL QUIZ ─────────────────────────────────────────
 const CAPITALS = [
   { country: "France", capital: "Paris" },
   { country: "Japan", capital: "Tokyo" },
@@ -1130,31 +1041,237 @@ const CAPITALS = [
   { country: "Indonesia", capital: "Jakarta" }
 ];
 
+let timerInterval = null;
+let timeLeft = ROUND_TIME;
+
+let state = {
+  username: '', score: 0, round: 0, roundsWon: 0,
+  currentCountry: '', clues: [], clueIndex: 0,
+  answered: false, usedCountries: []
+};
+
+const ADMIN_PASS = 'hellomoto';
+let isAdmin = false;
+
+function showHome() {
+  document.getElementById('home-view').style.display = 'block';
+  document.getElementById('witw-view').style.display = 'none';
+  document.getElementById('capital-view').style.display = 'none';
+  loadLeaderboard();
+checkApiStatus();
+loadActivityFeed();
+setInterval(loadActivityFeed, 15000);
+
+async function checkApiStatus() {
+  const endpoints = [
+    { id: 'api-leaderboard', url: '/leaderboard', method: 'GET' },
+    { id: 'api-info', url: '/info', method: 'GET' },
+    { id: 'api-performance', url: '/performance', method: 'GET' },
+    { id: 'api-history', url: '/history', method: 'GET' },
+  ];
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(API_BASE + ep.url);
+      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
+    } catch(e) {
+      document.getElementById(ep.id)?.classList.add('offline');
+    }
+  }
+  // /add and /remove are always shown as green (can't test without side effects)
+}
+
+async function loadActivityFeed() {
+  const feed = document.getElementById('activity-feed');
+  if (!feed) return;
+  try {
+    const res = await fetch(API_BASE + '/history');
+    const data = await res.json();
+    const rows = (data.data || []).slice(0, 5);
+    if (rows.length === 0) {
+      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
+      return;
+    }
+    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
+    feed.innerHTML = rows.map(row => {
+      const initials = cleanName(row.username).slice(0,2).toUpperCase();
+      const timeAgo = getTimeAgo(row.created_at);
+      const isCapital = row.username.includes('[Cap');
+      return `<div class="activity-item">
+        <div class="activity-avatar">${initials}</div>
+        <div class="activity-text">
+          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
+          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
+          <span class="activity-score">${row.score} pts</span>
+        </div>
+        <div class="activity-time">${timeAgo}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
+  }
+}
+
+function getTimeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+}
+
+function showGame(type) {
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('witw-view').style.display = type === 'witw' ? 'block' : 'none';
+  document.getElementById('capital-view').style.display = type === 'capital' ? 'block' : 'none';
+}
+
+function startGame() {
+  const name = document.getElementById('username-input').value.trim();
+  if (!name) { showToast('Enter your name first!'); return; }
+  state.username = name;
+  state.score = 0; state.round = 0; state.roundsWon = 0; state.usedCountries = [];
+  document.getElementById('witw-username-card').style.display = 'none';
+  document.getElementById('active-game').style.display = 'block';
+  document.getElementById('game-over').style.display = 'none';
+  nextRound();
+}
+
+function pickCountry() {
+  const all = Object.keys(COUNTRY_CLUES);
+  const remaining = all.filter(c => !state.usedCountries.includes(c));
+  const pick = remaining[Math.floor(Math.random() * remaining.length)];
+  state.usedCountries.push(pick);
+  return pick;
+}
+
+function nextRound() {
+  if (state.round >= TOTAL_ROUNDS) { endGame(); return; }
+  state.round++;
+  state.currentCountry = pickCountry();
+  state.clues = []; state.clueIndex = 0; state.answered = false;
+  updateUI();
+  document.getElementById('clues-list').innerHTML = '';
+  document.getElementById('guess-input').value = '';
+  hideFeedback();
+  document.getElementById('next-clue-btn').disabled = false;
+  document.getElementById('clue-cost-label').textContent = `Next clue costs ${CLUE_PENALTY} pts`;
+  startTimer();
+  revealNextClue(true);
+}
+
+function startTimer() {
+  clearTimer();
+  timeLeft = ROUND_TIME;
+  updateTimerUI();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerUI();
+    if (timeLeft <= 0) {
+      clearTimer();
+      if (!state.answered) {
+        state.answered = true;
+        showFeedback(`Time is up! The answer was ${state.currentCountry}.`, 'wrong');
+        document.getElementById('next-clue-btn').disabled = true;
+        setTimeout(() => nextRound(), 2000);
+      }
+    }
+  }, 1000);
+}
+
+function clearTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function updateTimerUI() {
+  const pct = (timeLeft / ROUND_TIME) * 100;
+  const fill = document.getElementById('timer-fill');
+  const label = document.getElementById('timer-display');
+  if (fill) { fill.style.width = pct + '%'; fill.className = 'timer-fill' + (timeLeft <= 10 ? ' danger' : ''); }
+  if (label) label.textContent = timeLeft;
+}
+
+function revealNextClue(free = false) {
+  if (state.answered) return;
+  const clues = COUNTRY_CLUES[state.currentCountry];
+  if (state.clueIndex >= clues.length) return;
+  const clueText = clues[state.clueIndex];
+  state.clues.push(clueText);
+  state.clueIndex++;
+  const list = document.getElementById('clues-list');
+  const el = document.createElement('div');
+  el.className = 'clue-item';
+  el.innerHTML = `<div class="clue-num">Clue ${state.clueIndex}</div>${clueText}`;
+  list.appendChild(el);
+  if (!free && state.clueIndex > 1) { state.score = Math.max(0, state.score - CLUE_PENALTY); updateUI(); }
+  document.getElementById('clue-cost-label').textContent =
+    state.clueIndex >= clues.length ? 'All clues revealed' : `Next clue costs ${CLUE_PENALTY} pts`;
+  document.getElementById('next-clue-btn').disabled = state.clueIndex >= clues.length;
+}
+
+function submitGuess() {
+  if (state.answered) return;
+  const guess = document.getElementById('guess-input').value.trim();
+  if (!guess) return;
+  const correct = guess.toLowerCase() === state.currentCountry.toLowerCase();
+  state.answered = true;
+  clearTimer();
+  if (correct) {
+    const pts = Math.max(BASE_SCORE - (state.clueIndex - 1) * CLUE_PENALTY, 10);
+    state.score += pts; state.roundsWon++;
+    showFeedback(`Correct! +${pts} points. It was ${state.currentCountry}!`, 'correct');
+  } else {
+    showFeedback(`Wrong! The answer was ${state.currentCountry}.`, 'wrong');
+  }
+  updateUI();
+  document.getElementById('next-clue-btn').disabled = true;
+  setTimeout(() => nextRound(), 2200);
+}
+
+function endGame() {
+  clearTimer();
+  document.getElementById('active-game').style.display = 'none';
+  document.getElementById('game-over').style.display = 'block';
+  document.getElementById('final-score-display').textContent = `${state.score} pts`;
+  document.getElementById('go-name').textContent = `Well played, ${state.username}!`;
+  document.getElementById('go-summary').textContent = `You got ${state.roundsWon} out of ${TOTAL_ROUNDS} countries correct.`;
+  submitScore(state.username, state.score, state.roundsWon);
+}
+
+function restartGame() {
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('active-game').style.display = 'block';
+  state.score = 0; state.round = 0; state.roundsWon = 0; state.usedCountries = [];
+  nextRound();
+}
+
+function updateUI() {
+  document.getElementById('score-display').textContent = state.score;
+  document.getElementById('round-display').textContent = `Round ${state.round} / ${TOTAL_ROUNDS}`;
+  document.getElementById('correct-display').textContent = state.roundsWon;
+}
+
+function showFeedback(msg, type) {
+  const el = document.getElementById('feedback');
+  el.textContent = msg; el.className = `feedback ${type}`;
+}
+function hideFeedback() { document.getElementById('feedback').className = 'feedback'; }
+
+// ─── CAPITAL QUIZ ─────────────────────────────────────────────
 let capState = {
-  username: '',
-  score: 0,
-  round: 0,
-  roundsWon: 0,
-  currentQ: null,
-  answered: false,
-  usedCountries: [],
-  timerInterval: null,
-  timeLeft: 30
+  username: '', score: 0, round: 0, roundsWon: 0,
+  currentQ: null, answered: false, usedCountries: [],
+  timerInterval: null, timeLeft: 30
 };
 
 function startCapitalGame() {
   const name = document.getElementById('cap-username-input').value.trim();
   if (!name) { showToast('Enter your name first!'); return; }
   capState.username = name;
-  capState.score = 0;
-  capState.round = 0;
-  capState.roundsWon = 0;
-  capState.usedCountries = [];
-
+  capState.score = 0; capState.round = 0; capState.roundsWon = 0; capState.usedCountries = [];
   document.getElementById('cap-username-card').style.display = 'none';
   document.getElementById('cap-active-game').style.display = 'block';
   document.getElementById('cap-game-over').style.display = 'none';
-
   nextCapitalRound();
 }
 
@@ -1162,19 +1279,16 @@ function nextCapitalRound() {
   if (capState.round >= TOTAL_ROUNDS) { endCapitalGame(); return; }
   capState.round++;
   capState.answered = false;
-
   const remaining = CAPITALS.filter(c => !capState.usedCountries.includes(c.country));
   const pick = remaining[Math.floor(Math.random() * remaining.length)];
   capState.usedCountries.push(pick.country);
   capState.currentQ = pick;
-
   document.getElementById('cap-country').textContent = pick.country;
   document.getElementById('cap-guess-input').value = '';
   document.getElementById('cap-feedback').className = 'feedback';
   document.getElementById('cap-score-display').textContent = capState.score;
   document.getElementById('cap-round-display').textContent = `Round ${capState.round} / ${TOTAL_ROUNDS}`;
   document.getElementById('cap-correct-display').textContent = capState.roundsWon;
-
   startCapTimer();
 }
 
@@ -1189,7 +1303,7 @@ function startCapTimer() {
       clearCapTimer();
       if (!capState.answered) {
         capState.answered = true;
-        showCapFeedback(`⏱ Time's up! The capital was ${capState.currentQ.capital}.`, 'wrong');
+        showCapFeedback(`Time is up! The capital was ${capState.currentQ.capital}.`, 'wrong');
         setTimeout(() => nextCapitalRound(), 2000);
       }
     }
@@ -1212,20 +1326,15 @@ function submitCapitalGuess() {
   if (capState.answered) return;
   const guess = document.getElementById('cap-guess-input').value.trim();
   if (!guess) return;
-
   const correct = guess.toLowerCase() === capState.currentQ.capital.toLowerCase();
-  capState.answered = true;
-  clearCapTimer();
-
+  capState.answered = true; clearCapTimer();
   if (correct) {
     const pts = Math.max(100 - (30 - capState.timeLeft) * 2, 10);
-    capState.score += pts;
-    capState.roundsWon++;
-    showCapFeedback(`✓ Correct! +${pts} points`, 'correct');
+    capState.score += pts; capState.roundsWon++;
+    showCapFeedback(`Correct! +${pts} points`, 'correct');
   } else {
-    showCapFeedback(`✗ Wrong! The capital is ${capState.currentQ.capital}.`, 'wrong');
+    showCapFeedback(`Wrong! The capital is ${capState.currentQ.capital}.`, 'wrong');
   }
-
   document.getElementById('cap-score-display').textContent = capState.score;
   document.getElementById('cap-correct-display').textContent = capState.roundsWon;
   setTimeout(() => nextCapitalRound(), 2200);
@@ -1233,8 +1342,7 @@ function submitCapitalGuess() {
 
 function showCapFeedback(msg, type) {
   const el = document.getElementById('cap-feedback');
-  el.textContent = msg;
-  el.className = `feedback ${type}`;
+  el.textContent = msg; el.className = `feedback ${type}`;
 }
 
 function endCapitalGame() {
@@ -1244,17 +1352,421 @@ function endCapitalGame() {
   document.getElementById('cap-final-score').textContent = `${capState.score} pts`;
   document.getElementById('cap-go-name').textContent = `Well played, ${capState.username}!`;
   document.getElementById('cap-go-summary').textContent = `You got ${capState.roundsWon} out of ${TOTAL_ROUNDS} capitals correct.`;
-  submitScore(capState.username + ' [Capital]', capState.score, capState.roundsWon);
+  submitScore(capState.username + ' [Cap]', capState.score, capState.roundsWon);
 }
 
 function restartCapitalGame() {
   document.getElementById('cap-game-over').style.display = 'none';
   document.getElementById('cap-active-game').style.display = 'block';
-  capState.score = 0;
-  capState.round = 0;
-  capState.roundsWon = 0;
-  capState.usedCountries = [];
+  capState.score = 0; capState.round = 0; capState.roundsWon = 0; capState.usedCountries = [];
   nextCapitalRound();
+}
+
+// ─── LEADERBOARD ──────────────────────────────────────────────
+async function submitScore(username, score, rounds_won) {
+  try {
+    await fetch(`${API_BASE}/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, score, rounds_won })
+    });
+    showToast('Score saved to leaderboard!');
+    loadLeaderboard();
+checkApiStatus();
+loadActivityFeed();
+setInterval(loadActivityFeed, 15000);
+
+async function checkApiStatus() {
+  const endpoints = [
+    { id: 'api-leaderboard', url: '/leaderboard', method: 'GET' },
+    { id: 'api-info', url: '/info', method: 'GET' },
+    { id: 'api-performance', url: '/performance', method: 'GET' },
+    { id: 'api-history', url: '/history', method: 'GET' },
+  ];
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(API_BASE + ep.url);
+      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
+    } catch(e) {
+      document.getElementById(ep.id)?.classList.add('offline');
+    }
+  }
+  // /add and /remove are always shown as green (can't test without side effects)
+}
+
+async function loadActivityFeed() {
+  const feed = document.getElementById('activity-feed');
+  if (!feed) return;
+  try {
+    const res = await fetch(API_BASE + '/history');
+    const data = await res.json();
+    const rows = (data.data || []).slice(0, 5);
+    if (rows.length === 0) {
+      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
+      return;
+    }
+    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
+    feed.innerHTML = rows.map(row => {
+      const initials = cleanName(row.username).slice(0,2).toUpperCase();
+      const timeAgo = getTimeAgo(row.created_at);
+      const isCapital = row.username.includes('[Cap');
+      return `<div class="activity-item">
+        <div class="activity-avatar">${initials}</div>
+        <div class="activity-text">
+          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
+          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
+          <span class="activity-score">${row.score} pts</span>
+        </div>
+        <div class="activity-time">${timeAgo}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
+  }
+}
+
+function getTimeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+  } catch(e) { showToast('Score not saved'); }
+}
+
+async function loadLeaderboard() {
+  try {
+    const res = await fetch(`${API_BASE}/leaderboard`);
+    const data = await res.json();
+    const rows = data.data || [];
+
+    // Clean names — remove [Capital] and [Cap] tags
+    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
+
+    // Podium top 3
+    const pods = ['pod1','pod2','pod3'];
+    pods.forEach((id, i) => {
+      const row = rows[i];
+      if (row) {
+        const initials = cleanName(row.username).slice(0,2).toUpperCase();
+        document.getElementById(`${id}-avatar`).textContent = initials;
+        document.getElementById(`${id}-name`).textContent = cleanName(row.username);
+        document.getElementById(`${id}-score`).textContent = row.score + ' pts';
+      }
+    });
+
+    // Rest of leaderboard (4th onwards)
+    const rest = document.getElementById('lb-rest');
+    const remaining = rows.slice(3);
+    if (remaining.length === 0 && rows.length === 0) {
+      rest.innerHTML = '<div class="lb-empty">No scores yet — be the first!</div>';
+    } else {
+      rest.innerHTML = remaining.map((row, i) => `
+        <div class="lb-row" id="lb-row-${row.id}">
+          <span class="lb-rank-num">${i + 4}</span>
+          <span class="lb-name">${escHtml(cleanName(row.username))}</span>
+          <span class="lb-pts">${row.score}</span>
+          ${isAdmin ? `<button onclick="removeScore(${row.id})" style="background:transparent;border:1px solid rgba(248,113,113,0.3);color:var(--red);border-radius:6px;padding:3px 8px;font-size:0.72rem;cursor:pointer;margin-left:4px">✕</button>` : ''}
+        </div>`).join('');
+    }
+  } catch(e) {
+    document.getElementById('lb-rest').innerHTML = '<div class="lb-empty">Could not load</div>';
+  }
+
+  // Load stats
+  try {
+    const sRes = await fetch(`${API_BASE}/info`);
+    const sData = await sRes.json();
+    if (sData.success && sData.data.count > 0) {
+      document.getElementById('stat-players').textContent = sData.data.count;
+      document.getElementById('stat-high').textContent = sData.data.max;
+      document.getElementById('stat-avg').textContent = sData.data.mean;
+      document.getElementById('stat-median').textContent = sData.data.median;
+    }
+  } catch(e) {}
+}
+
+async function removeScore(id) {
+  if (!confirm('Remove this entry?')) return;
+  try {
+    const res = await fetch(`${API_BASE}/remove`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) { showToast('Entry removed'); loadLeaderboard();
+checkApiStatus();
+loadActivityFeed();
+setInterval(loadActivityFeed, 15000);
+
+async function checkApiStatus() {
+  const endpoints = [
+    { id: 'api-leaderboard', url: '/leaderboard', method: 'GET' },
+    { id: 'api-info', url: '/info', method: 'GET' },
+    { id: 'api-performance', url: '/performance', method: 'GET' },
+    { id: 'api-history', url: '/history', method: 'GET' },
+  ];
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(API_BASE + ep.url);
+      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
+    } catch(e) {
+      document.getElementById(ep.id)?.classList.add('offline');
+    }
+  }
+  // /add and /remove are always shown as green (can't test without side effects)
+}
+
+async function loadActivityFeed() {
+  const feed = document.getElementById('activity-feed');
+  if (!feed) return;
+  try {
+    const res = await fetch(API_BASE + '/history');
+    const data = await res.json();
+    const rows = (data.data || []).slice(0, 5);
+    if (rows.length === 0) {
+      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
+      return;
+    }
+    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
+    feed.innerHTML = rows.map(row => {
+      const initials = cleanName(row.username).slice(0,2).toUpperCase();
+      const timeAgo = getTimeAgo(row.created_at);
+      const isCapital = row.username.includes('[Cap');
+      return `<div class="activity-item">
+        <div class="activity-avatar">${initials}</div>
+        <div class="activity-text">
+          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
+          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
+          <span class="activity-score">${row.score} pts</span>
+        </div>
+        <div class="activity-time">${timeAgo}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
+  }
+}
+
+function getTimeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+} }
+  } catch(e) { showToast('Error removing entry'); }
+}
+
+function toggleAdmin() {
+  if (isAdmin) {
+    isAdmin = false;
+    document.getElementById('admin-toggle-btn').textContent = '⚙ admin';
+    showToast('Admin mode off');
+    loadLeaderboard();
+checkApiStatus();
+loadActivityFeed();
+setInterval(loadActivityFeed, 15000);
+
+async function checkApiStatus() {
+  const endpoints = [
+    { id: 'api-leaderboard', url: '/leaderboard', method: 'GET' },
+    { id: 'api-info', url: '/info', method: 'GET' },
+    { id: 'api-performance', url: '/performance', method: 'GET' },
+    { id: 'api-history', url: '/history', method: 'GET' },
+  ];
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(API_BASE + ep.url);
+      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
+    } catch(e) {
+      document.getElementById(ep.id)?.classList.add('offline');
+    }
+  }
+  // /add and /remove are always shown as green (can't test without side effects)
+}
+
+async function loadActivityFeed() {
+  const feed = document.getElementById('activity-feed');
+  if (!feed) return;
+  try {
+    const res = await fetch(API_BASE + '/history');
+    const data = await res.json();
+    const rows = (data.data || []).slice(0, 5);
+    if (rows.length === 0) {
+      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
+      return;
+    }
+    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
+    feed.innerHTML = rows.map(row => {
+      const initials = cleanName(row.username).slice(0,2).toUpperCase();
+      const timeAgo = getTimeAgo(row.created_at);
+      const isCapital = row.username.includes('[Cap');
+      return `<div class="activity-item">
+        <div class="activity-avatar">${initials}</div>
+        <div class="activity-text">
+          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
+          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
+          <span class="activity-score">${row.score} pts</span>
+        </div>
+        <div class="activity-time">${timeAgo}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
+  }
+}
+
+function getTimeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+  } else {
+    const pass = prompt('Admin password:');
+    if (pass === ADMIN_PASS) {
+      isAdmin = true;
+      document.getElementById('admin-toggle-btn').textContent = '⚙ admin ✓';
+      showToast('Admin mode on');
+      loadLeaderboard();
+checkApiStatus();
+loadActivityFeed();
+setInterval(loadActivityFeed, 15000);
+
+async function checkApiStatus() {
+  const endpoints = [
+    { id: 'api-leaderboard', url: '/leaderboard', method: 'GET' },
+    { id: 'api-info', url: '/info', method: 'GET' },
+    { id: 'api-performance', url: '/performance', method: 'GET' },
+    { id: 'api-history', url: '/history', method: 'GET' },
+  ];
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(API_BASE + ep.url);
+      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
+    } catch(e) {
+      document.getElementById(ep.id)?.classList.add('offline');
+    }
+  }
+  // /add and /remove are always shown as green (can't test without side effects)
+}
+
+async function loadActivityFeed() {
+  const feed = document.getElementById('activity-feed');
+  if (!feed) return;
+  try {
+    const res = await fetch(API_BASE + '/history');
+    const data = await res.json();
+    const rows = (data.data || []).slice(0, 5);
+    if (rows.length === 0) {
+      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
+      return;
+    }
+    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
+    feed.innerHTML = rows.map(row => {
+      const initials = cleanName(row.username).slice(0,2).toUpperCase();
+      const timeAgo = getTimeAgo(row.created_at);
+      const isCapital = row.username.includes('[Cap');
+      return `<div class="activity-item">
+        <div class="activity-avatar">${initials}</div>
+        <div class="activity-text">
+          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
+          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
+          <span class="activity-score">${row.score} pts</span>
+        </div>
+        <div class="activity-time">${timeAgo}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
+  }
+}
+
+function getTimeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+    } else {
+      showToast('Wrong password');
+    }
+  }
+}
+
+function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+loadLeaderboard();
+checkApiStatus();
+loadActivityFeed();
+setInterval(loadActivityFeed, 15000);
+
+async function checkApiStatus() {
+  const endpoints = [
+    { id: 'api-leaderboard', url: '/leaderboard', method: 'GET' },
+    { id: 'api-info', url: '/info', method: 'GET' },
+    { id: 'api-performance', url: '/performance', method: 'GET' },
+    { id: 'api-history', url: '/history', method: 'GET' },
+  ];
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(API_BASE + ep.url);
+      if (!r.ok) document.getElementById(ep.id)?.classList.add('offline');
+    } catch(e) {
+      document.getElementById(ep.id)?.classList.add('offline');
+    }
+  }
+  // /add and /remove are always shown as green (can't test without side effects)
+}
+
+async function loadActivityFeed() {
+  const feed = document.getElementById('activity-feed');
+  if (!feed) return;
+  try {
+    const res = await fetch(API_BASE + '/history');
+    const data = await res.json();
+    const rows = (data.data || []).slice(0, 5);
+    if (rows.length === 0) {
+      feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">No activity yet</div>';
+      return;
+    }
+    const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
+    feed.innerHTML = rows.map(row => {
+      const initials = cleanName(row.username).slice(0,2).toUpperCase();
+      const timeAgo = getTimeAgo(row.created_at);
+      const isCapital = row.username.includes('[Cap');
+      return `<div class="activity-item">
+        <div class="activity-avatar">${initials}</div>
+        <div class="activity-text">
+          <span class="activity-name">${escHtml(cleanName(row.username))}</span>
+          <span style="color:var(--muted);font-size:0.72rem"> · ${isCapital ? '🏛 Capital' : '🌍 WITW'}</span><br>
+          <span class="activity-score">${row.score} pts</span>
+        </div>
+        <div class="activity-time">${timeAgo}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    feed.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0">—</div>';
+  }
+}
+
+function getTimeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
 }
 </script>
 </body>
