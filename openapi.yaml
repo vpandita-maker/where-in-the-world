@@ -61,15 +61,25 @@ paths:
         Removes an entry by id or username.
         Send a JSON body with either `id` (integer) or `username` (string).
         Example body: `{"id": 1}` or `{"username": "Vansh"}`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 1
+                username:
+                  type: string
+                  example: Vansh
       parameters:
         - in: query
-          name: id
+          name: dummy_ignore
           schema:
-            type: integer
-          description: ID of the entry to remove
-          example: 1
-        - in: query
-          name: username
+            type: string
+          description: ignored
           schema:
             type: string
           description: Username of the entry to remove
