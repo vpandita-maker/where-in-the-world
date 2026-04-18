@@ -677,6 +677,7 @@ header h1 {
             <div class="podium-name" id="pod2-name">—</div>
             <div class="podium-score" id="pod2-score">—</div>
             <div class="podium-rank">2nd</div>
+            <button id="pod2-remove" onclick="removePodium(1)" style="display:none;background:transparent;border:1px solid rgba(248,113,113,0.4);color:var(--red);border-radius:6px;padding:3px 10px;font-size:0.68rem;cursor:pointer;margin-top:4px">✕</button>
             <div class="podium-block"></div>
           </div>
           <div class="podium-slot first">
@@ -684,6 +685,7 @@ header h1 {
             <div class="podium-name" id="pod1-name">—</div>
             <div class="podium-score" id="pod1-score">—</div>
             <div class="podium-rank">1st</div>
+            <button id="pod1-remove" onclick="removePodium(0)" style="display:none;background:transparent;border:1px solid rgba(248,113,113,0.4);color:var(--red);border-radius:6px;padding:3px 10px;font-size:0.68rem;cursor:pointer;margin-top:4px">✕</button>
             <div class="podium-block"></div>
           </div>
           <div class="podium-slot third">
@@ -691,6 +693,7 @@ header h1 {
             <div class="podium-name" id="pod3-name">—</div>
             <div class="podium-score" id="pod3-score">—</div>
             <div class="podium-rank">3rd</div>
+            <button id="pod3-remove" onclick="removePodium(2)" style="display:none;background:transparent;border:1px solid rgba(248,113,113,0.4);color:var(--red);border-radius:6px;padding:3px 10px;font-size:0.68rem;cursor:pointer;margin-top:4px">✕</button>
             <div class="podium-block"></div>
           </div>
         </div>
@@ -1394,14 +1397,17 @@ async function loadLeaderboard() {
     const cleanName = n => n.replace(/\s*\[(Capital|Cap)\]/g, '').trim();
 
     // Podium top 3
+    window._podiumIds = [null, null, null];
     const pods = ['pod1','pod2','pod3'];
     pods.forEach((id, i) => {
       const row = rows[i];
       if (row) {
+        window._podiumIds[i] = row.id;
         const initials = cleanName(row.username).slice(0,2).toUpperCase();
         document.getElementById(`${id}-avatar`).textContent = initials;
         document.getElementById(`${id}-name`).textContent = cleanName(row.username);
         document.getElementById(`${id}-score`).textContent = row.score + ' pts';
+        if (isAdmin) document.getElementById(`${id}-remove`).style.display = 'inline-block';
       }
     });
 
@@ -1436,6 +1442,13 @@ async function loadLeaderboard() {
   } catch(e) {}
 }
 
+async function removePodium(index) {
+  const id = window._podiumIds?.[index];
+  if (!id) return;
+  if (!confirm('Remove this top player from the leaderboard?')) return;
+  await removeScore(id);
+}
+
 async function removeScore(id) {
   if (!confirm('Remove this entry?')) return;
   try {
@@ -1466,38 +1479,14 @@ function toggleAdmin() {
     isAdmin = false;
     document.getElementById('admin-toggle-btn').textContent = '⚙ admin';
     showToast('Admin mode off');
-    
-
-
-
-
-
-function getTimeAgo(dateStr) {
-  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-  if (diff < 60) return diff + 's ago';
-  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-  return Math.floor(diff/86400) + 'd ago';
-}
+    loadLeaderboard();
   } else {
     const pass = prompt('Admin password:');
     if (pass === ADMIN_PASS) {
       isAdmin = true;
       document.getElementById('admin-toggle-btn').textContent = '⚙ admin ✓';
       showToast('Admin mode on');
-      
-
-
-
-
-
-function getTimeAgo(dateStr) {
-  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-  if (diff < 60) return diff + 's ago';
-  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-  return Math.floor(diff/86400) + 'd ago';
-}
+      loadLeaderboard();
     } else {
       showToast('Wrong password');
     }
